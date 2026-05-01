@@ -24,8 +24,12 @@ export default defineConfig({
   // vite config needed at scaffold time.
 
   build: {
-    // Inline critical CSS for above-the-fold rendering performance.
-    inlineStylesheets: 'auto',
+    // Inline ALL CSS so the browser never makes a render-blocking request
+    // for an external stylesheet. Total CSS budget across components is
+    // ~20KB; inlining is the right tradeoff at this scale and pushes
+    // First Contentful Paint forward. Closes Lighthouse
+    // "render-blocking-resources" hard-fail.
+    inlineStylesheets: 'always',
   },
 
   prefetch: {

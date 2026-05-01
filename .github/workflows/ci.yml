@@ -1,0 +1,67 @@
+# CI — runs Biome lint, Astro check, full TypeScript check, and a production build
+# on every PR and on every push to main. No deploy here (see deploy.yml).
+#
+# Per ADR-0001 §CI/CD and CLAUDE.md §6 (Testing standards) / §11 (Performance).
+# Quality gates: any job failure blocks the merge once branch protection is enabled.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Principle of least privilege: CI only needs to read the repo to run lint/check/build.
+# No deploy, no PR comments, no security uploads from this workflow.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same PR / branch to save Actions minutes,
+# but never cancel main-branch runs (those are the canonical record of build health).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  verify:
+    name: Lint, type-check, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Node version is the single source of truth in .nvmrc (22.18.0).
+      # setup-node's npm cache key is keyed off package-lock.json automatically.
+      - name: Setup Node.js (from .nvmrc)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      # `npm ci` is strict-mode install — fails if lockfile and package.json
+      # disagree. Required for reproducible CI builds.
+      - name: Install dependencies
+        run: npm ci
+
+      # Biome 2.4.13 — single tool for lint + format check (per biome.json).
+      # Fails fast on style and lint violations.
+      - name: Lint (Biome)
+        run: npm run lint
+
+      # Astro's own diagnostics (`.astro` files, content collection schemas).
+      # Surfaces issues TypeScript alone wouldn't catch.
+      - name: Astro check
+        run: npm run check
+
+      # `npm run typecheck` runs `astro check && tsc --noEmit` — full strict TS.
+      # Redundant astro check is cheap and keeps each script independently runnable.
+      - name: TypeScript strict check
+        run: npm run typecheck
+
+      # Production build. If this fails on main, deploy will skip — both workflows
+      # share the same build invariants.
+      - name: Build (astro build)
+        run: npm run build

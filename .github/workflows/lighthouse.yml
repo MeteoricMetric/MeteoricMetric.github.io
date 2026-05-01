@@ -1,0 +1,57 @@
+# Lighthouse CI — enforces Performance / Accessibility / Best Practices / SEO
+# >= 95 on every PR, per CLAUDE.md §6.1 and ADR-0001 §CI/CD.
+#
+# Strategy: build the site, run `astro preview` as a local server in the
+# background, then point treosh/lighthouse-ci-action at it. Asserts are
+# defined in .lighthouserc.json at repo root (so they're version-controlled
+# and reusable for `lhci autorun` locally).
+
+name: Lighthouse
+
+on:
+  pull_request:
+    branches: [main]
+
+# Read source + write PR comments (for the Lighthouse report link). No deploys.
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Lighthouse audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (from .nvmrc)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (astro build)
+        run: npm run build
+
+      # treosh/lighthouse-ci-action handles starting a static server when given
+      # `staticDistDir` via the lhci config, OR we can pass URLs directly.
+      # We use the config file (.lighthouserc.json) as the source of truth so
+      # the same assertions run locally via `npx lhci autorun`.
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: './.lighthouserc.json'
+          # Public temporary storage gives us a shareable HTML report URL that
+          # gets posted into the PR. No GitHub App install needed.
+          uploadArtifacts: true
+          temporaryPublicStorage: true

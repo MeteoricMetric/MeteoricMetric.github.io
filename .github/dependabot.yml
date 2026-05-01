@@ -1,0 +1,67 @@
+# Dependabot — automated dependency PRs.
+#
+# Per ADR-0001 §Security automation and CLAUDE.md §5.2 (Dependabot mandatory).
+# Two ecosystems: npm (app deps) and github-actions (workflow pins).
+# Strategy:
+#   - Group minor + patch updates per ecosystem into a single PR (low review cost).
+#   - Major updates open separately so each one gets a dedicated review +
+#     changelog read (semver-major = potential breaking change).
+#   - Weekly cadence — frequent enough to stay current, infrequent enough not
+#     to drown a single-author project in PRs.
+
+version: 2
+
+updates:
+  # ---------------------------------------------------------------------------
+  # Application dependencies (Astro, integrations, devDependencies).
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'America/Los_Angeles'
+    open-pull-requests-limit: 5
+    target-branch: 'main'
+    reviewers:
+      - 'MeteoricMetric'
+    labels:
+      - 'dependencies'
+      - 'npm'
+    commit-message:
+      prefix: 'chore(deps)'
+      include: 'scope'
+    groups:
+      npm-minor-patch:
+        applies-to: version-updates
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions workflow pins (actions/checkout, setup-node, deploy-pages, ...).
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'America/Los_Angeles'
+    open-pull-requests-limit: 5
+    target-branch: 'main'
+    reviewers:
+      - 'MeteoricMetric'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+    commit-message:
+      prefix: 'chore(actions)'
+      include: 'scope'
+    groups:
+      actions-minor-patch:
+        applies-to: version-updates
+        update-types:
+          - 'minor'
+          - 'patch'

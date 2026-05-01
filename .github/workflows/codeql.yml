@@ -1,0 +1,68 @@
+# CodeQL — static analysis security scanner.
+#
+# Per ADR-0001 §Security automation and CLAUDE.md §5.2.
+# Runs on PR, push to main, and weekly on a fixed off-peak slot.
+#
+# Language: 'javascript-typescript' is the modern (2026) combined identifier
+# for CodeQL — TypeScript analysis is performed by the JavaScript extractor
+# with TS enabled, which is the default. Confirmed via codeql-action docs and
+# GitHub's "Supported languages" page. If a future CodeQL release ever splits
+# them again, switch to a matrix of ['javascript', 'typescript'].
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly Monday 09:17 UTC (~02:17 PT / 05:17 ET — off-peak for both coasts,
+    # also off the top of the hour to avoid the well-known scheduler thundering
+    # herd against GitHub's Actions runners).
+    - cron: '17 9 * * 1'
+
+# Least-privilege: security-events to upload SARIF, contents/actions read for
+# repo + workflow introspection. Nothing else.
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Single combined identifier covers both .js and .ts in this repo.
+        language: ['javascript-typescript']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Initialize CodeQL with both the default suite and security-extended.
+      # security-extended adds higher-effort / lower-precision queries that
+      # catch issues the default suite misses — appropriate for a public-facing
+      # site owned by a minor (per CLAUDE.md §5 threat model).
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      # No build step needed: JS/TS uses the autobuild-free extractor for
+      # source-only repos. (If the project ever adds a build artifact CodeQL
+      # needs to scan, insert `github/codeql-action/autobuild@v3` here.)
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'

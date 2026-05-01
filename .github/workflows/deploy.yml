@@ -1,0 +1,91 @@
+# Deploy — builds the Astro site and publishes dist/ to GitHub Pages on push to main.
+#
+# Follows the canonical Astro on GitHub Pages pattern documented at
+# https://docs.astro.build/en/guides/deploy/github/ — two-job structure
+# (build → deploy) using actions/configure-pages, upload-pages-artifact,
+# and deploy-pages.
+#
+# CNAME handling: this repo has CNAME at both repo root (legacy GitHub Pages
+# convention for the source branch) AND public/CNAME. Astro copies anything in
+# public/ verbatim into dist/ at build time, so the artifact uploaded to Pages
+# will contain dist/CNAME — which is what the Pages runtime reads to bind the
+# custom domain (merricstrough.com). See CLAUDE.md §0 / §3.1 / CLAUDE.local.md §1.
+#
+# CAVEAT (verify on first deploy): if the custom domain is dropped after the
+# first GitHub-Actions-driven deploy, confirm dist/CNAME is present in the
+# uploaded artifact and that GitHub Pages settings still show the custom domain.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Manual re-deploy escape hatch (e.g. CNAME re-bind, secret rotation).
+  workflow_dispatch:
+
+# GitHub Pages OIDC deploy requires id-token: write. Pages publish requires
+# pages: write. Source read needs contents: read. Nothing else is needed.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Per GitHub Pages guidance: serialize deploys, but DO NOT cancel an in-flight
+# deploy — interrupting deploy-pages mid-publish can leave the site in a broken
+# state. Queued runs wait; they don't replace the running one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (from .nvmrc)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # configure-pages exports useful env vars (e.g. for base path).
+      # For an apex custom domain (merricstrough.com) base path is '/', which
+      # is Astro's default — no astro.config change needed.
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build (astro build)
+        run: npm run build
+
+      # upload-pages-artifact tar+gzips the directory and stages it for deploy.
+      # Path MUST be ./dist (Astro's default outDir). dist/CNAME is included
+      # automatically because public/CNAME is copied there at build time.
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # The `github-pages` environment is required by deploy-pages and is what
+    # surfaces the live URL in the Actions UI and on the repo's Environments tab.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

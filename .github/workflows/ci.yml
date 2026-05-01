@@ -31,12 +31,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Node version is the single source of truth in .nvmrc (22.18.0).
       # setup-node's npm cache key is keyed off package-lock.json automatically.
       - name: Setup Node.js (from .nvmrc)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -52,14 +52,11 @@ jobs:
         run: npm run lint
 
       # Astro's own diagnostics (`.astro` files, content collection schemas).
-      # Surfaces issues TypeScript alone wouldn't catch.
+      # `astro check` includes TypeScript-strict checking via the language server,
+      # so we don't need a separate `tsc --noEmit` step (which can't see virtual
+      # modules like `astro:content`).
       - name: Astro check
         run: npm run check
-
-      # `npm run typecheck` runs `astro check && tsc --noEmit` — full strict TS.
-      # Redundant astro check is cheap and keeps each script independently runnable.
-      - name: TypeScript strict check
-        run: npm run typecheck
 
       # Production build. If this fails on main, deploy will skip — both workflows
       # share the same build invariants.

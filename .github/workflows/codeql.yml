@@ -47,14 +47,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Initialize CodeQL with both the default suite and security-extended.
       # security-extended adds higher-effort / lower-precision queries that
       # catch issues the default suite misses — appropriate for a public-facing
       # site owned by a minor (per CLAUDE.md §5 threat model).
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
@@ -63,6 +63,6 @@ jobs:
       # source-only repos. (If the project ever adds a build artifact CodeQL
       # needs to scan, insert `github/codeql-action/autobuild@v3` here.)
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: '/language:${{ matrix.language }}'

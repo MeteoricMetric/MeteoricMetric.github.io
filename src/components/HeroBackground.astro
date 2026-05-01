@@ -14,11 +14,27 @@ const { mode, image, canvasPreset } = Astro.props;
 const showImage = (mode === 'image' || mode === 'layered') && Boolean(image);
 const showCanvas = mode === 'canvas' || mode === 'layered';
 const canvasOpacity = mode === 'layered' ? 0.4 : 1;
+
+// Strip extension to compose AVIF + WebP companion paths. Pages CMS uploads
+// land in /public/hero/*.{jpg,png}; the optimize-images.mjs pipeline writes
+// .avif + .webp siblings. If they're missing the <picture> degrades to JPEG.
+const imageBase = image?.replace(/\.(jpg|jpeg|png|webp)$/i, '');
 ---
 
 <div class="hero-bg" aria-hidden="true">
-  {showImage && image && (
-    <img src={image} alt="" class="hero-bg__image" loading="eager" decoding="async" />
+  {showImage && image && imageBase && (
+    <picture>
+      <source type="image/avif" srcset={`${imageBase}.avif`} />
+      <source type="image/webp" srcset={`${imageBase}.webp`} />
+      <img
+        src={image}
+        alt=""
+        class="hero-bg__image"
+        loading="eager"
+        decoding="async"
+        fetchpriority="high"
+      />
+    </picture>
   )}
   {showCanvas && <HeroCanvas preset={canvasPreset} opacity={canvasOpacity} />}
   <div class="hero-bg__veil"></div>

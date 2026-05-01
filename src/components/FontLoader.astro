@@ -20,13 +20,15 @@
   crossorigin="anonymous"
 />
 
-{/* Newsreader — Google Fonts in v1; self-host deferred. */}
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  rel="stylesheet"
-  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap"
-/>
+{/*
+  Newsreader (serif accent per ADR-0002) is not used by any rendered
+  component yet. Loading it from Google Fonts costs a render-blocking
+  external CSS request + a font fetch — Lighthouse correctly flags
+  this as "render-blocking-resources" + "network-dependency-tree" /
+  third-party-origin. Re-enable when we ship a component that
+  actually consumes var(--font-serif), and prefer self-hosting at
+  that point per ADR-0002 §Open items.
+*/}
 
 {/*
   Self-hosted Geist @font-face declarations. Emitted as a global style block

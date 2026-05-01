@@ -21,7 +21,8 @@
     "typecheck": "astro check",
     "favicons": "node scripts/generate-favicons.mjs",
     "og": "node scripts/generate-og.mjs",
-    "assets": "npm run favicons && npm run og",
+    "images": "node scripts/optimize-images.mjs",
+    "assets": "npm run favicons && npm run og && npm run images",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "astro": "astro"

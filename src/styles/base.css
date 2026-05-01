@@ -62,19 +62,25 @@ samp {
 
 /* ── Links ─────────────────────────────────────────────────────────── */
 
+/* Links default to underlined for a11y (Lighthouse / axe flag links
+   that rely on color alone). Components that intentionally suppress
+   the underline (CTA pills, nav buttons) opt out via :where() class. */
 a {
   color: var(--color-accent);
-  text-decoration-color: oklch(64% 0.22 285 / 30%);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.22em;
   transition:
     color var(--duration-fast) var(--ease-out),
-    text-decoration-color var(--duration-fast) var(--ease-out);
+    text-decoration-color var(--duration-fast) var(--ease-out),
+    text-decoration-thickness var(--duration-fast) var(--ease-out);
 }
 
 a:hover {
   color: var(--color-accent-hover);
-  text-decoration-color: var(--color-accent);
+  text-decoration-color: var(--color-accent-hover);
+  text-decoration-thickness: 2px;
 }
 
 /* ── Focus + selection ─────────────────────────────────────────────── */

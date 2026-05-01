@@ -9,15 +9,20 @@ const { tagline, blurb } = identity;
 
 <section class="identity" aria-labelledby="identity-heading">
   <div class="identity__inner">
-    <img
-      src="/avatar.jpg"
-      alt=""
-      class="identity__avatar"
-      width="160"
-      height="160"
-      loading="eager"
-      decoding="async"
-    />
+    <picture>
+      <source type="image/avif" srcset="/avatar.avif" />
+      <source type="image/webp" srcset="/avatar.webp" />
+      <img
+        src="/avatar.jpg"
+        alt=""
+        class="identity__avatar"
+        width="160"
+        height="160"
+        loading="eager"
+        decoding="async"
+        fetchpriority="high"
+      />
+    </picture>
     <p class="eyebrow identity__eyebrow">about</p>
     <h2 id="identity-heading" class="identity__tagline">{tagline}</h2>
     {blurb && <p class="identity__blurb">{blurb}</p>}

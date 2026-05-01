@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Initialize CodeQL with both the default suite and security-extended.
       # security-extended adds higher-effort / lower-precision queries that

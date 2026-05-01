@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Node version is the single source of truth in .nvmrc (22.18.0).
       # setup-node's npm cache key is keyed off package-lock.json automatically.

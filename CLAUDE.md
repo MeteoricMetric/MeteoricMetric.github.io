@@ -104,14 +104,29 @@ If a request is ambiguous, ask before acting. Better one clarifying question tha
 
 ## 3. Technical stack & architecture
 
-### 3.1 Current stack
-- **Frontend:** Static HTML5, modern CSS (custom properties, grid, flexbox). No framework.
-- **Hosting:** GitHub Pages (free, fast, version-controlled deploys via push)
-- **Domain / DNS:** Porkbun (apex `merricstrough.com`)
-- **TLS:** Let's Encrypt via GitHub Pages (auto-renewed)
+### 3.1 Current stack — v2 (2026-05)
 
-### 3.2 Why no framework (yet)
-React/Vue/Svelte are powerful but they're not the right tool for a personal site of <10 pages. They add build complexity, slow first-paint, and obscure how the web actually works. Merric should learn HTML/CSS/JS fundamentals first. We graduate to a framework when there's a real reason — not before.
+| Layer | Choice | Notes |
+|---|---|---|
+| **Meta-framework** | Astro 6 (latest stable) | HTML-first, near-zero client JS by default; multi-framework component islands when interactivity is genuinely needed; first-class Cloudflare Workers support; static output deploys to GitHub Pages |
+| **Language** | TypeScript (strict mode) | Type safety with zero runtime cost in static builds; `tsconfig.json` extends `astro/tsconfigs/strict` plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, `isolatedModules` |
+| **Styling** | Vanilla CSS with OKLCH design-token layer + Astro-scoped component styles | Tokens in `src/styles/tokens.css`; reset + base in `src/styles/`; component styles use Astro's scoped `<style>` blocks |
+| **Content** | Astro content collections with Zod schemas | Markdown-first authoring; type-safe at build time; Pages CMS edits write directly into the content directory |
+| **Lint + format** | Biome | Single tool; replaces ESLint + Prettier; `biome.json` at repo root |
+| **Tests** | Playwright + axe-core (a11y) + Lighthouse CI (perf) | Cross-browser (Chromium / Firefox / Webkit); WCAG 2.2 AA floor; performance ≥ 95 |
+| **Admin / CMS** | Pages CMS (hosted at `app.pagescms.org`) primary; github.dev power-user fallback; Sveltia self-host as Phase-4 graduation if needed | Schema in `.pages.yml` |
+| **Spotify Now Playing** | Cloudflare Worker (`worker/`) | Refresh-token flow, edge-cached access tokens, CORS-restricted to merricstrough.com + dev origin |
+| **CI/CD** | GitHub Actions: ci → codeql → lighthouse → deploy | All in `.github/workflows/` |
+| **Security automation** | Dependabot + CodeQL + branch protection | Per §5.2 |
+| **Hosting** | GitHub Pages (Actions-driven deploy, NOT branch-source) | Static output |
+| **Domain / DNS** | Custom domain via DNS registrar (specifics in `CLAUDE.local.md`) | apex `merricstrough.com`; HTTPS via Let's Encrypt auto-provisioned by GitHub Pages |
+
+Decided in [`docs/decisions/0001-adopt-astro-typescript-stack.md`](docs/decisions/0001-adopt-astro-typescript-stack.md).
+
+### 3.2 Why Astro
+Astro is HTML-first and ships zero client JS by default. An Astro component is essentially HTML/CSS with a TypeScript frontmatter — Merric reading the source still sees actual HTML, not React abstractions. We get the benefits of a real framework (typed content collections, image pipeline, view transitions, sitemap, MDX, motion primitives) without the ergonomic tax of an SPA. Multi-framework component islands let us drop in React/Solid/Svelte for a single interactive widget (e.g., the Now Spinning ticker) without site-wide JS overhead.
+
+The v1 instinct ("vanilla until proven we need a framework") was the right philosophy at v1's scope. v2's scope (CMS-driven hero, Spotify Now Playing, family-graph cross-linking, Lighthouse-95 gates) crosses the threshold where Astro pays for itself. See ADR-0001 for the full alternatives analysis (Next.js, SvelteKit, Eleventy, continuing vanilla).
 
 ### 3.3 Future architecture
 Subdomains will live in their own repos to keep concerns separated and deploys independent:
@@ -120,6 +135,8 @@ Subdomains will live in their own repos to keep concerns separated and deploys i
 - `art.merricstrough.com` ← `merric-art` repo
 - `youtube.merricstrough.com`, `twitch.merricstrough.com` ← may be DNS redirects, not full sites
 
+For v2 launch, sub-routes (`/minecraft/`, `/art/`, `/youtube/`, `/twitch/`) ship in this repo as Astro pages. Extraction to sibling subdomain repos happens in Phase 4 when each route's content depth justifies the split.
+
 ### 3.4 The Minecraft subsystem (separate but related)
 The Minecraft server runs on a home workstation under Docker (Paper + Geyser + Floodgate), exposed via a tunnel service (operational specifics in `CLAUDE.local.md`). The minecraft subdomain page is a static frontend; the server itself is operational infrastructure documented in its own repo. Don't conflate them.
 
@@ -127,53 +144,68 @@ The Minecraft server runs on a home workstation under Docker (Paper + Geyser + F
 
 ## 4. Coding standards
 
-### 4.1 HTML
+### 4.1 HTML / Astro components (`.astro`)
 - Semantic tags always. `<main>`, `<nav>`, `<article>`, `<section>`, `<header>`, `<footer>`. Never `<div>` when a real element exists.
-- Every `<img>` has descriptive `alt` text. Decorative images get `alt=""`.
-- Lang attribute on `<html>`. Viewport meta tag. Title and description on every page.
+- Every `<img>` has descriptive `alt` text. Decorative images get `alt=""`. Prefer Astro's `<Image>` component for any non-hero raster image — it handles AVIF/WebP/responsive srcset/lazy automatically.
+- Lang attribute on `<html>` (set by `BaseLayout.astro`). Viewport meta tag, title, description on every page (set by `BaseHead.astro`).
 - Heading hierarchy is strict: one `<h1>` per page, no skipped levels.
 - Forms (when added): proper labels, fieldsets, ARIA where needed.
+- Astro components live in `src/components/` (consumable across pages) or `src/layouts/` (page wrappers). Use the path aliases `@components/`, `@layouts/`, `@data/`, `@styles/`, `@content/` defined in `tsconfig.json`.
 
 ### 4.2 CSS
-- Mobile-first. Base styles target small screens; media queries scale up.
-- Custom properties (CSS variables) for design tokens — colors, spacing, typography. No magic numbers.
-- Logical properties where supported (`margin-block`, `padding-inline`).
+- All design values consumed through tokens in `src/styles/tokens.css` — colors, typography, spacing, radius, shadow, motion, z-index. Never hard-code values; if a token doesn't exist, add it and reference it.
+- Color tokens are OKLCH-first with sRGB hex fallback via `@supports`. Document the hex value in a comment when adding a new color token.
+- Mobile-first. Base styles target small screens; container queries (`@container`) preferred over media queries for component-scoped responsiveness.
+- Logical properties throughout (`margin-block`, `padding-inline`, `inset-block-end`, etc.).
 - Avoid `!important`. If you need it, you've structured selectors wrong.
-- Animations use `prefers-reduced-motion` to respect accessibility.
-- No CSS-in-JS, no Tailwind in this project (yet) — keep it learnable.
+- Animations respect `prefers-reduced-motion` via the duration tokens (the reduced-motion media query collapses durations to 0.01ms in `tokens.css`).
+- Component styles use Astro's scoped `<style>` blocks. Global rules go in `src/styles/base.css` or a dedicated stylesheet imported by `BaseLayout.astro`.
+- No Tailwind, no CSS-in-JS — keep the source legible and the token discipline first-class. (Tailwind shines at multi-author scale; not the right tool here.)
 
-### 4.3 JavaScript (when introduced)
-- Vanilla JS until proven we need a framework
-- ES modules, `const` by default, arrow functions where they read better
-- No global state. No `var`. No `==` (only `===`).
-- Strict null checking discipline — if it can be undefined, handle it.
-- Comment intent, not implementation. Code says *what*, comments say *why*.
+### 4.3 TypeScript / JavaScript
+- TypeScript strict mode everywhere — `tsconfig.json` extends `astro/tsconfigs/strict` with `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, `isolatedModules` on top.
+- Astro's "islands" principle: components ship as static HTML by default. Only opt into client-side hydration when the feature genuinely requires it (e.g., the Now Spinning live update, the hero canvas). Never reach for client JS to do something CSS or server-rendered HTML can do.
+- ES modules, `const` by default, arrow functions where they read better. No `var`. No `==` (only `===`).
+- Strict null checking — if it can be undefined, handle it. With `exactOptionalPropertyTypes` on, optional props are spread-forwarded conditionally rather than passed as `undefined`.
+- Comment intent, not implementation. Default to no comments unless the *why* is non-obvious. Code says *what*; comments say *why* (constraint, invariant, workaround, surprise).
 
 ### 4.4 File organization
 ```
 /
-├── index.html              # main landing page
-├── /pages/                 # additional top-level pages
-├── /assets/
-│   ├── /img/               # images, optimized
-│   ├── /fonts/             # self-hosted fonts (privacy, perf)
-│   └── /icons/             # SVG icons
-├── /css/                   # stylesheets when externalized
-├── /js/                    # scripts when needed
-├── /docs/                  # project documentation
-│   └── /decisions/         # architectural decision records
-├── CNAME                   # GitHub Pages custom domain lock
-├── robots.txt              # search engine directives
-├── sitemap.xml             # SEO sitemap
+├── src/
+│   ├── components/         # Astro components (BaseHead, Footer, PersonSchema, FontLoader, …)
+│   ├── content/            # Pages-CMS-managed content (hero.json, identity.json, projects/*.md)
+│   ├── data/               # Typed structural data (family.ts, accounts.ts)
+│   ├── layouts/            # Page layouts (BaseLayout)
+│   ├── pages/              # File-based routes (index.astro, 404.astro, …)
+│   └── styles/             # Design tokens, reset, base CSS
+├── public/                 # Static assets — copied verbatim to dist/
+│   ├── CNAME               # GitHub Pages custom-domain binding
+│   ├── avatar.jpg
+│   ├── fonts/              # Self-hosted Geist Sans + Mono variable woff2
+│   ├── robots.txt
+│   ├── humans.txt
+│   └── .well-known/security.txt
+├── tests/                  # Playwright + axe specs
+├── worker/                 # Cloudflare Worker (Spotify Now Playing)
+├── docs/decisions/         # Architectural Decision Records (ADRs)
+├── .github/workflows/      # CI / deploy / CodeQL / Lighthouse
+├── .pages.yml              # Pages CMS schema
+├── astro.config.mjs
+├── biome.json
+├── playwright.config.ts
+├── tsconfig.json
+├── package.json
 ├── README.md               # public-facing project description
-└── CLAUDE.md               # this file (instructions for AI)
+├── CLAUDE.md               # this file (instructions for AI)
+└── CLAUDE.local.md         # gitignored — operational details (registrar, hardware, secrets)
 ```
 
 ### 4.5 Naming conventions
-- Files: `kebab-case.html`, `kebab-case.css`
+- Files: `kebab-case.html`, `kebab-case.css`, `PascalCase.astro` for components, `camelCase.ts` for data/utilities
 - CSS classes: `kebab-case` (BEM if components grow complex)
 - IDs: avoid for styling; use for anchors and form labels only
-- JS: `camelCase` for variables/functions, `PascalCase` for classes/constructors, `SCREAMING_SNAKE` for true constants
+- TS: `camelCase` for variables/functions, `PascalCase` for types/interfaces/classes/components, `SCREAMING_SNAKE` for true constants
 
 ---
 
@@ -221,18 +253,20 @@ Before any `git commit`, mentally run this checklist:
 ## 6. Testing standards
 
 ### 6.1 What we test
-- **Visual** — every change is loaded in a browser before commit. Mobile viewport (375px), tablet (768px), desktop (1280px).
+- **Visual** — every change is loaded in a browser before commit. Mobile viewport (375px), tablet (768px), desktop (1280px), large desktop (1920px).
 - **Cross-browser** — Chrome, Firefox, Safari (or Webkit). Edge inherits from Chrome.
 - **Accessibility** — keyboard navigation works on every interactive element. Screen reader announcement makes sense (test with VoiceOver or NVDA quarterly).
 - **Performance** — Lighthouse score ≥ 95 on Performance, Accessibility, Best Practices, SEO for the production build.
 - **Link integrity** — internal and external links verified after page changes.
 
-### 6.2 What we automate (over time)
-- HTML validation (`html-validate` or similar) in CI
-- CSS lint (Stylelint)
-- Lighthouse CI on PRs
-- Dead link checker (Lychee) on a schedule
-- Image optimization check (no images > 200KB without justification)
+### 6.2 What we automate (active in CI)
+- **Lint + format:** Biome (`npm run lint`) — runs in `.github/workflows/ci.yml` on every PR + push to main
+- **Type check:** `npm run check` (Astro check) + `npm run typecheck` (full TS) — same CI workflow
+- **Build:** `npm run build` — fail-fast on any compile error
+- **Cross-browser smoke + a11y + visual + perf:** Playwright (`npm run test`) — config at `playwright.config.ts`, specs in `tests/`. axe-core via `@axe-core/playwright` enforces WCAG 2.2 AA on landing
+- **Lighthouse CI:** `.github/workflows/lighthouse.yml` on PRs — asserts Performance / Accessibility / Best Practices / SEO ≥ 95
+- **Security scanning:** CodeQL weekly + on push (`.github/workflows/codeql.yml`); Dependabot weekly grouped patches (`.github/dependabot.yml`); private vulnerability reporting via `.well-known/security.txt`
+- **Image optimization:** Astro's `<Image>` component handles AVIF/WebP/responsive srcset/lazy automatically — no separate check needed unless we ship a non-`<Image>` asset
 
 ### 6.3 Manual smoke test before deploy
 For any non-trivial change, before pushing to main:
@@ -495,17 +529,18 @@ After cross-linking goes live:
 ## 11. Performance standards
 
 ### 11.1 Budgets
-- **Time to First Byte:** < 200ms
-- **Largest Contentful Paint:** < 1.5s on 4G
-- **Total Blocking Time:** < 200ms
-- **Cumulative Layout Shift:** < 0.05
-- **Total page weight:** < 500KB for landing pages, < 1MB for content pages
+- **Time to First Byte:** < 200ms (GitHub Pages CDN should give us this for free)
+- **Largest Contentful Paint:** < 1.5s on 4G (Astro's static output + critical-CSS inlining + font preload should comfortably hit)
+- **Total Blocking Time:** < 200ms (zero client JS by default; only hydrate islands that need it)
+- **Cumulative Layout Shift:** < 0.05 (`font-display: swap` with `size-adjust` where needed)
+- **Total page weight:** < 500KB for landing pages, < 1MB for content pages (current font baseline: ~290KB Geist sans+mono+italics; budget allocation tracked in `.lighthouserc.json`)
+- **Lighthouse CI gates** in CI assert all four ≥ 95 — see `.lighthouserc.json` and `.github/workflows/lighthouse.yml`
 
 ### 11.2 Discipline
-- Images: WebP/AVIF where supported, with fallbacks. Lazy-load below the fold.
-- Fonts: `font-display: swap`, preload critical faces, subset where possible.
-- CSS: critical inline, rest async.
-- JavaScript: defer or async by default. Never block rendering.
+- Images: WebP/AVIF where supported, with fallbacks. Lazy-load below the fold. Use Astro's `<Image>` component — it handles all of this.
+- Fonts: `font-display: swap`, preload critical faces, subset where possible. Geist self-hosted in `public/fonts/`.
+- CSS: critical inline (`build.inlineStylesheets: 'auto'` in `astro.config.mjs`), rest async.
+- JavaScript: defer or async by default. Astro's islands hydrate only when needed (`client:load`, `client:idle`, `client:visible`, `client:media`).
 
 ---
 
@@ -513,13 +548,17 @@ After cross-linking goes live:
 
 ### 12.1 Day-to-day
 1. Pull latest: `git pull`
-2. Make change with Claude Code
-3. Visual + Lighthouse smoke test in browser
-4. Stage: `git status`, then `git add` (be selective — never `git add .` blindly)
-5. Commit: clear message in conventional format
-6. Push: `git push`
-7. Verify live site updated (~30 sec on GitHub Pages)
-8. Update sitemap if page count or content changed
+2. `npm install` if `package.json` or `package-lock.json` changed since last pull
+3. `npm run dev` — local dev server at http://localhost:4321 with hot reload
+4. Make change with Claude Code
+5. Verify locally: `npm run check` (Astro + TS check), `npm run lint` (Biome), `npm test` (Playwright if UI changed)
+6. Visual smoke in browser (mobile / tablet / desktop / large)
+7. `npm run build` — confirm production build succeeds
+8. Stage: `git status`, then `git add <specific files>` (never `git add .` — see §5.5)
+9. Commit: conventional-commits format, one logical change per commit
+10. Push: `git push` — GitHub Actions runs CI + CodeQL + Lighthouse + deploys to Pages on merge to main
+11. Verify live site updated (~1-2 min for the Actions deploy)
+12. Sitemap is auto-generated by `@astrojs/sitemap` on each build — no manual update needed
 
 ### 12.2 When stuck
 1. Ask Claude Code (read docs, attempt fix)
@@ -585,6 +624,8 @@ This order matters. Self-sufficiency before dependence.
 - [ ] Stand up Paper + Geyser + Floodgate Minecraft server in Docker
 - [ ] Wire `mc.merricstrough.com` to playit.gg tunnel
 
+> **Note:** This section reflects v1 state. Current v2-build progress is captured in commit history and ADRs. This section will be rewritten to reflect post-v2-launch state in a follow-up commit.
+
 ---
 
 ## 15. Versioning of this file
@@ -600,7 +641,8 @@ This file is committed to the public repo. Operational details — registrar nam
 ### Changelog
 - **v1.0** — initial creation. Comprehensive standards across security, design, testing, docs, and AI utilization.
 - **v1.1** — added Section 10 (Cross-site identity & family graph): authentic cross-linking conventions between merricstrough.com, shanestrough.com, and future family domains. JSON-LD Person schema with parent/sibling relationships, `rel="me"` IndieWeb conventions, footer attribution rules, anti-patterns to avoid. Renumbered subsequent sections.
-- **v1.2** — Stack pivot to Astro 6 + TypeScript per ADR-0001 (`/docs/decisions/0001-adopt-astro-typescript-stack.md`). Visual direction & design system v1 per ADR-0002 (Geist Sans/Mono + Newsreader, OKLCH dark canvas with `#8b6bff` signature, View Transitions + scroll-driven CSS motion, three-plane CMS-driven hero). Family-graph implementation specifics per ADR-0003. Redaction pass for public-repo commit; operational details moved to `CLAUDE.local.md` (gitignored). CLAUDE.md §3-§4 / §6.2 / §11 / §12.1 will be updated in a follow-up commit to reflect the chosen stack — that diff is specified in ADR-0001's "Required CLAUDE.md updates" section.
+- **v1.2** — Stack pivot to Astro 6 + TypeScript per ADR-0001 (`/docs/decisions/0001-adopt-astro-typescript-stack.md`). Visual direction & design system v1 per ADR-0002 (Geist Sans/Mono + Newsreader, OKLCH dark canvas with `#8b6bff` signature, View Transitions + scroll-driven CSS motion, three-plane CMS-driven hero). Family-graph implementation specifics per ADR-0003. Redaction pass for public-repo commit; operational details moved to `CLAUDE.local.md` (gitignored).
+- **v1.3** — Apply ADR-0001's required CLAUDE.md updates: §3.1 stack table replaces vanilla-only description, §3.2 rewritten as "Why Astro", §3.3 v2-launch sub-route plan added, §4.1/§4.2/§4.3 reflect Astro components + token discipline + TS-strict + islands principle, §4.4 file tree updated for src/components/layouts/data/styles + public/fonts + tests + worker + .pages.yml, §6.2 lists active CI tooling (Biome / Astro check / Playwright + axe / Lighthouse CI / CodeQL / Dependabot), §11.1 budgets annotated with how Astro hits them and pointer to .lighthouserc.json, §12.1 workflow steps reflect npm dev/check/lint/test/build commands and Actions-driven deploy. §14 marked as v1-state pending a v2 rewrite.
 
 ---
 

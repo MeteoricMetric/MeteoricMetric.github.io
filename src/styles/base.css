@@ -8,7 +8,10 @@ html {
   font-size: 16px;
   background: var(--color-canvas);
   color: var(--color-text-primary);
-  color-scheme: dark;
+  /* Tells the browser our colors work for both modes — affects scrollbar,
+     form-control, and other UA-rendered surfaces. tokens.css + the
+     prefers-color-scheme media query handle the actual color flip. */
+  color-scheme: light dark;
   accent-color: var(--color-accent);
 }
 
@@ -80,9 +83,19 @@ a {
 }
 
 a:hover {
+  /* In dark mode go BRIGHTER on hover; in light mode go DARKER.
+     Both directions push the accent further from the text-primary
+     baseline so the hover state reads as a clear lift. */
   color: oklch(88% 0.16 285);
   text-decoration-color: oklch(88% 0.16 285);
   text-decoration-thickness: 2px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) a:hover {
+    color: oklch(40% 0.22 285);
+    text-decoration-color: oklch(40% 0.22 285);
+  }
 }
 
 /* ── Focus + selection ─────────────────────────────────────────────── */

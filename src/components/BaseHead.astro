@@ -30,6 +30,11 @@ const siteName = 'merricstrough.com';
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="generator" content={Astro.generator} />
+{/* theme-color flips with system preference so the browser chrome / address bar
+    matches the canvas color in either mode. Light fallback in case the browser
+    doesn't honor media-scoped theme-color (most modern browsers do). */}
+<meta name="theme-color" content="#f7f6fa" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1a1820" media="(prefers-color-scheme: dark)" />
 <meta name="theme-color" content="#1a1820" />
 
 {/*

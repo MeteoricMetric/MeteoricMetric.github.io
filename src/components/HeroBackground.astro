@@ -78,6 +78,28 @@ const imageBase = image?.replace(/\.(jpg|jpeg|png|webp)$/i, '');
     pointer-events: none;
   }
 
+  /* Light-mode veil — flip the dark fade-to-canvas to a light one. The
+     image's own brightness filter still does most of the legibility work. */
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme='dark']) .hero-bg__image {
+      filter: brightness(0.85) saturate(1.05);
+    }
+    :root:not([data-theme='dark']) .hero-bg__veil {
+      background:
+        radial-gradient(
+          ellipse at 50% 100%,
+          var(--color-accent-glow) 0%,
+          transparent 55%
+        ),
+        linear-gradient(
+          180deg,
+          oklch(98% 0.005 285 / 0.4) 0%,
+          oklch(98% 0.005 285 / 0.85) 70%,
+          var(--color-canvas) 100%
+        );
+    }
+  }
+
   /* sRGB fallback for the veil */
   @supports not (color: oklch(0% 0 0)) {
     .hero-bg__veil {
@@ -88,6 +110,18 @@ const imageBase = image?.replace(/\.(jpg|jpeg|png|webp)$/i, '');
           transparent 55%
         ),
         linear-gradient(180deg, rgba(26, 24, 32, 0.4) 0%, rgba(26, 24, 32, 0.85) 70%, #1a1820 100%);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme='dark']) .hero-bg__veil {
+        background:
+          radial-gradient(
+            ellipse at 50% 100%,
+            rgba(139, 107, 255, 0.4) 0%,
+            transparent 55%
+          ),
+          linear-gradient(180deg, rgba(247, 246, 250, 0.4) 0%, rgba(247, 246, 250, 0.85) 70%, #f7f6fa 100%);
+      }
     }
   }
 </style>

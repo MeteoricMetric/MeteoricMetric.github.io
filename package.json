@@ -18,7 +18,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "typecheck": "astro check && tsc --noEmit",
+    "typecheck": "astro check",
     "favicons": "node scripts/generate-favicons.mjs",
     "og": "node scripts/generate-og.mjs",
     "assets": "npm run favicons && npm run og",

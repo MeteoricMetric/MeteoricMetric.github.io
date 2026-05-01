@@ -601,30 +601,40 @@ This order matters. Self-sufficiency before dependence.
 
 ## 14. Current project state
 
-**As of last update to this file:**
-- ✅ Domain registered (WHOIS privacy on, auto-renew on)
-- ✅ GitHub account created with 2FA, recovery codes stored offline
-- ✅ Repo `meteoricmetric.github.io` exists
-- ✅ Pages deployed at https://merricstrough.com (custom domain, HTTPS enforced)
-- ✅ Initial `index.html` live with avatar and three nav links
-- ✅ `CNAME` file present
-- ✅ Local git config scoped to Merric's identity (commits attribute correctly)
+> **For the active punch list** (manual GH UI steps, Spotify Worker deploy, Pages CMS connection, Merric's account URLs, etc.) see `docs/STATUS.md`. This section captures durable project state.
 
-**Next up:**
-- [ ] `robots.txt`
-- [ ] `sitemap.xml`
-- [ ] Open Graph + Twitter card meta tags on index
-- [ ] JSON-LD Person schema with family graph (per Section 10.3)
-- [ ] Footer attribution to shanestrough.com with `rel="me"` (per Section 10.3)
-- [ ] Inverse `rel="me"` and JSON-LD updates on shanestrough.com
-- [ ] Validate via Google Rich Results Test + IndieWebify.me
-- [ ] Favicon set (16, 32, 180 apple-touch, 192, 512)
-- [ ] Lighthouse pass — confirm 95+ across all four
-- [ ] Spin up `minecraft.merricstrough.com` repo and basic landing page
-- [ ] Stand up Paper + Geyser + Floodgate Minecraft server in Docker
-- [ ] Wire `mc.merricstrough.com` to playit.gg tunnel
+### v2 (Astro 6) — landed 2026-05-01
 
-> **Note:** This section reflects v1 state. Current v2-build progress is captured in commit history and ADRs. This section will be rewritten to reflect post-v2-launch state in a follow-up commit.
+**Shipped:**
+- Astro 6.2.1 + TypeScript strict, deployed to GitHub Pages via Actions
+- Six pages: `/`, `/404`, `/minecraft`, `/art`, `/youtube`, `/twitch`
+- Full design system per ADR-0002 (OKLCH tokens, dark canvas, signature accent, fluid type, motion vocab, prefers-reduced-motion)
+- Three-plane CMS-driven hero (image | canvas | layered) with starfield + wireframe-planet canvas presets, View Transitions, gradient veil, accent-aware glow
+- Identity / Projects / FollowGrid / Footer landing sections
+- Cross-site identity per ADR-0003: `<link rel="me">` chain, JSON-LD Person schema with family graph
+- Self-hosted Geist Sans + Mono variable fonts (~290KB), Newsreader serif accent from Google Fonts
+- SVG favicon + Web App Manifest (raster fallbacks deferred to Phase 2)
+- Pages CMS schema at `.pages.yml`
+- Cloudflare Worker for Spotify Now Playing in `worker/` (deployment pending — see STATUS.md)
+- GitHub Actions: ci → codeql → lighthouse → deploy
+- Dependabot weekly grouped patches, branch protection (when enabled by Shane)
+- Playwright + axe-core 12-project test matrix (3 browsers × 4 viewports)
+- Lighthouse CI gating Performance / Accessibility / Best Practices / SEO ≥ 95
+- robots.txt, humans.txt, security.txt (RFC 9116), sitemap auto-generation
+
+**Page weight on landing:** ~180KB first paint (HTML + critical CSS + JS + 1 preloaded font + avatar).
+
+### Pending external/manual work
+Tracked in detail in `docs/STATUS.md`. High-level:
+- Shane: GitHub UI configuration (Pages source = Actions, Dependabot/security toggles, branch protection)
+- Shane / Merric: Cloudflare account + Spotify Developer App + Worker deploy
+- Merric: Pages CMS account hookup + log in at app.pagescms.org
+- Merric: provide YouTube / Spotify / Discord / Steam URLs to replace placeholders in `src/data/accounts.ts`
+- Future session: shanestrough.com inverse `rel="me"` + JSON-LD `children` array
+- Phase 2 polish: raster favicon fallbacks, OG default image, tighter CSP, light mode tokens
+
+### v1 → v2 cutover status
+Old v1 `index.html` at repo root preserved during v2 buildout — GitHub Pages keeps serving it from the `main` branch root until the Actions-driven deploy from `dist/` takes over. Once first deploy is verified working, delete root `index.html` + root `avatar.jpg` (the v2 versions live in `public/`).
 
 ---
 

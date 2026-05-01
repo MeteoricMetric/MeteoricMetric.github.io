@@ -60,7 +60,7 @@ jobs:
       # For an apex custom domain (merricstrough.com) base path is '/', which
       # is Astro's default — no astro.config change needed.
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Build (astro build)
         run: npm run build

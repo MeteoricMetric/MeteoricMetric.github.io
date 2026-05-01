@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "astro-build.astro-vscode",
+    "biomejs.biome",
+    "ms-playwright.playwright",
+    "yoavbls.pretty-ts-errors",
+    "unifiedjs.vscode-mdx",
+    "EditorConfig.EditorConfig"
+  ]
+}

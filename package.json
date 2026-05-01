@@ -1,0 +1,43 @@
+{
+  "name": "merricstrough-com",
+  "type": "module",
+  "version": "2.0.0-pre.1",
+  "private": true,
+  "description": "merricstrough.com — personal site of Merric Strough (handle: MeteoricMetric)",
+  "homepage": "https://merricstrough.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MeteoricMetric/MeteoricMetric.github.io.git"
+  },
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "astro check && tsc --noEmit",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^5.0.4",
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.2",
+    "astro": "^6.2.1",
+    "geist": "^1.7.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@axe-core/playwright": "^4.11.3",
+    "@biomejs/biome": "^2.4.13",
+    "@playwright/test": "^1.59.1",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20.18.0"
+  }
+}

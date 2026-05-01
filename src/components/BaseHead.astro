@@ -56,16 +56,13 @@ const siteName = 'merricstrough.com';
 {verifiedAccounts.map((account) => <link rel="me" href={account.url} />)}
 
 {/*
-  TODO(phase-0-followup): generate the favicon set and place at /public/.
-  Files referenced below do not exist yet; links are wired so the manifest
-  is correct on day-one of the asset commit.
+  Modern browsers use the SVG favicon at any size. Web App Manifest
+  enables Add-to-Home-Screen on mobile.
+  TODO(phase-2): generate raster fallbacks (apple-touch-icon 180px,
+  favicon.ico, icon-192/512 PNG) for Safari iOS / very-old-browser
+  parity. Defer until after v2 ships.
 */}
-<link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="manifest" href="/manifest.webmanifest" />
 
 <FontLoader />

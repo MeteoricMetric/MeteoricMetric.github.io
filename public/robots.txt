@@ -1,0 +1,12 @@
+# merricstrough.com — robots.txt
+# Allow indexing of public pages.
+
+User-agent: *
+Allow: /
+
+# Block any future admin / draft / preview routes preemptively.
+Disallow: /admin/
+Disallow: /draft/
+Disallow: /preview/
+
+Sitemap: https://merricstrough.com/sitemap-index.xml

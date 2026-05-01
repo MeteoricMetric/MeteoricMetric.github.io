@@ -1,0 +1,21 @@
+/* TEAM */
+  Owner: Merric Strough
+  Handle: MeteoricMetric
+  Site: https://merricstrough.com
+
+  Co-pilot: Shane Strough
+  Site: https://shanestrough.com
+
+  AI collaboration: Claude (Anthropic)
+
+/* THANKS */
+  Vercel — for Geist + Geist Mono
+  Astro team — for the framework
+  Pages CMS — for the admin layer
+  Cloudflare — for free Workers + Web Analytics
+
+/* SITE */
+  Stack: Astro 6, TypeScript, vanilla CSS with OKLCH design tokens
+  Hosting: GitHub Pages
+  Standards: HTML5, CSS, ES2024, WCAG 2.2 AA
+  Last update: 2026-05-01

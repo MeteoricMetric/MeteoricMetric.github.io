@@ -1,0 +1,7 @@
+# merricstrough.com — security policy (RFC 9116).
+# Lets security researchers responsibly report vulnerabilities.
+
+Contact: https://github.com/MeteoricMetric/MeteoricMetric.github.io/security/advisories/new
+Expires: 2027-05-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://merricstrough.com/.well-known/security.txt

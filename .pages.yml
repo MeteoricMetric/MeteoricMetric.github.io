@@ -63,6 +63,8 @@ content:
           values:
             - { value: starfield,        label: 'Starfield (MeteoricMetric default)' }
             - { value: wireframe-planet, label: 'Wireframe planet' }
+            - { value: particle-drift,   label: 'Particle drift (atmospheric dust)' }
+            - { value: meridian-grid,    label: 'Meridian grid (perspective horizon)' }
         default: starfield
 
       - name: accentOverride

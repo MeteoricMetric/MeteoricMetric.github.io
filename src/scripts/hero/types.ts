@@ -5,7 +5,11 @@
  * rAF handles or event listeners.
  */
 
-export type HeroCanvasPreset = 'starfield' | 'wireframe-planet';
+export type HeroCanvasPreset =
+  | 'starfield'
+  | 'wireframe-planet'
+  | 'particle-drift'
+  | 'meridian-grid';
 
 export interface HeroCanvasOptions {
   canvas: HTMLCanvasElement;

@@ -4,6 +4,8 @@
  * the caller (Astro island) is responsible for tearing down on unmount.
  */
 
+import { createMeridianGrid } from './meridian-grid';
+import { createParticleDrift } from './particle-drift';
 import { createStarfield } from './starfield';
 import type { HeroCanvasController, HeroCanvasOptions, HeroCanvasPreset } from './types';
 import { createWireframePlanet } from './wireframe-planet';
@@ -19,6 +21,10 @@ export function mountHeroCanvas(
       return createStarfield(opts);
     case 'wireframe-planet':
       return createWireframePlanet(opts);
+    case 'particle-drift':
+      return createParticleDrift(opts);
+    case 'meridian-grid':
+      return createMeridianGrid(opts);
   }
 }
 

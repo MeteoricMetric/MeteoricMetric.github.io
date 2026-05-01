@@ -18,7 +18,9 @@ import { z } from 'astro/zod';
 const heroSchema = z.object({
   backgroundMode: z.enum(['image', 'canvas', 'layered']).default('layered'),
   backgroundImage: z.string().optional(),
-  canvasPreset: z.enum(['starfield', 'wireframe-planet']).default('starfield'),
+  canvasPreset: z
+    .enum(['starfield', 'wireframe-planet', 'particle-drift', 'meridian-grid'])
+    .default('starfield'),
   accentOverride: z.string().optional(),
   headline: z.string().min(1),
   subhead: z.string().optional(),

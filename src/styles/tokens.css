@@ -25,6 +25,13 @@
   --color-accent-hover:   oklch(70% 0.22 285);
   --color-accent-muted:   oklch(64% 0.22 285 / 12%);
   --color-accent-glow:    oklch(64% 0.22 285 / 40%);
+  /* Brighter hue for ACCENT-COLORED TEXT on dark / muted-accent surfaces.
+     Lighthouse / axe enforce 4.5:1 contrast for normal text; the
+     signature accent at oklch 64% sits right at the edge against the
+     canvas, so any small surface tint can drop it under threshold.
+     This token explicitly keeps text passes WCAG 2.2 AA without
+     changing the visual feel of accent backgrounds / glows / borders. */
+  --color-accent-text:    oklch(82% 0.16 285);
 
   /* Semantic */
   --color-focus-ring:     oklch(80% 0.18 285);
@@ -163,6 +170,7 @@
     --color-accent-hover:   #a18aff;
     --color-accent-muted:   rgba(139, 107, 255, 0.12);
     --color-accent-glow:    rgba(139, 107, 255, 0.40);
+    --color-accent-text:    #c4b6ff;
     --color-focus-ring:     #b59eff;
   }
 }

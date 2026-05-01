@@ -64,11 +64,13 @@ samp {
 
 /* Links default to underlined for a11y (Lighthouse / axe flag links
    that rely on color alone). Components that intentionally suppress
-   the underline (CTA pills, nav buttons) opt out via :where() class. */
+   the underline (CTA pills, nav buttons) opt out via :where() class.
+   Color is `--color-accent-text` (brighter than `--color-accent`) so
+   accent-colored TEXT clears WCAG 2.2 AA against the canvas. */
 a {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   text-decoration: underline;
-  text-decoration-color: var(--color-accent);
+  text-decoration-color: var(--color-accent-text);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 0.22em;
   transition:
@@ -78,8 +80,8 @@ a {
 }
 
 a:hover {
-  color: var(--color-accent-hover);
-  text-decoration-color: var(--color-accent-hover);
+  color: oklch(88% 0.16 285);
+  text-decoration-color: oklch(88% 0.16 285);
   text-decoration-thickness: 2px;
 }
 

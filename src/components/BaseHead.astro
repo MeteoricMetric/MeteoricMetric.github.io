@@ -64,6 +64,17 @@ const siteName = 'merricstrough.com';
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={ogImageHref} />
 
+{/* Preload the LCP image (avatar) in modern format. Browsers without
+    AVIF support (~2% in 2026) ignore the unsupported type and fall
+    through to the <picture> tag's WebP / JPEG sources at render time. */}
+<link
+  rel="preload"
+  as="image"
+  type="image/avif"
+  href="/avatar.avif"
+  fetchpriority="high"
+/>
+
 {/* IndieWeb identity — outgoing rel=me to parent + each verified account. */}
 <link rel="me" href={parent.url} />
 {verifiedAccounts.map((account) => <link rel="me" href={account.url} />)}

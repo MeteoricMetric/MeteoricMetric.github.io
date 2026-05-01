@@ -40,43 +40,45 @@ export const accounts: readonly Account[] = [
     verified: true,
     showInFollow: true,
   },
+  {
+    // Discord community server — "Meteoric metric maze". Invite URL goes
+    // straight to the server join page (the handle is a slug of the server
+    // name, not a Discord user-handle, since Discord usernames aren't
+    // public-profile URLs).
+    platform: 'Discord',
+    url: 'https://discord.gg/j9QrCRvyks',
+    handle: 'meteoricmetricmaze',
+    verified: true,
+    showInFollow: true,
+  },
+  {
+    // Steam — the custom URL slug `merricstrough` is Merric's full first +
+    // last name concatenated, which on a strict reading of CLAUDE.md §5.3
+    // would qualify as "full last name on visible page content" (FollowGrid
+    // pill + JSON-LD sameAs + search-engine indexing).
+    //
+    // EXPLICIT §5.3 OVERRIDE: Shane (parent, accountable adult per §0)
+    // exercised his §13.4 final call on 2026-05-01 and chose to keep
+    // the surname slug rather than rename the Steam custom URL. Future
+    // sessions: do NOT "fix" this back to a placeholder. The override is
+    // intentional. If the threat model shifts (e.g. specific harassment
+    // surfaces), revisit by talking to Shane.
+    platform: 'Steam',
+    url: 'https://steamcommunity.com/id/merricstrough',
+    handle: 'merricstrough',
+    verified: true,
+    showInFollow: true,
+  },
 
   // ── Pending — see notes ──────────────────────────────────────────────────
 
-  // YouTube — channel URL not yet provided. When Merric creates / shares it,
-  // confirm the @handle does NOT include his real last name (per §5.3),
+  // YouTube — channel URL still pending (Merric is working on it). When
+  // received, confirm the @handle does NOT expose his real last name
+  // (per §5.3, unless Shane chooses to override per the Steam pattern),
   // then flip verified: true + add showInFollow: true.
   {
     platform: 'YouTube',
     url: 'https://www.youtube.com/@TODO',
-    handle: 'TODO',
-    verified: false,
-  },
-
-  // Discord — Merric's current handle is `roblox_1720`, but Shane flagged it
-  // as a possible rename ("we could make a new one or change it"). Discord
-  // usernames don't have a public-profile URL pattern (only numeric IDs do),
-  // so even when verified, this is more useful as a friend-add hint than a
-  // FollowGrid pill. Hold off until either (a) a brand-aligned handle is
-  // chosen, or (b) we set up a Discord community server with an invite URL.
-  {
-    platform: 'Discord',
-    url: 'https://discord.com/users/TODO',
-    handle: 'roblox_1720',
-    verified: false,
-  },
-
-  // Steam — Merric's current Steam custom URL is `steamcommunity.com/id/merricstrough`.
-  // The custom slug is his FULL LAST NAME, which trips CLAUDE.md §5.3
-  // (no full last name on visible page content; the URL would expose it
-  // either in the FollowGrid label or in JSON-LD sameAs and search results).
-  // Suggested fix: change the Steam custom URL to `meteoricmetric` or
-  // `metric1720` via Profile → Edit Profile → Custom URL on steamcommunity.com.
-  // Account + items + friends are preserved across the rename. Once renamed,
-  // update the URL + handle below + flip verified: true.
-  {
-    platform: 'Steam',
-    url: 'https://steamcommunity.com/id/TODO',
     handle: 'TODO',
     verified: false,
   },

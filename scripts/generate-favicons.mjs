@@ -8,7 +8,7 @@
 // These rasters exist for: Safari iOS Add-to-Home-Screen, Android home
 // screen, web app manifest icon variants, and very-old browser fallback.
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';

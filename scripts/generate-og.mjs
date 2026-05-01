@@ -7,7 +7,6 @@
 // Used as the og:image / twitter:image fallback in BaseHead.astro when
 // a page doesn't override with its own ogImage prop.
 
-import { writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -108,9 +107,7 @@ const SVG = `<?xml version="1.0" encoding="UTF-8"?>
 `;
 
 async function main() {
-  await sharp(Buffer.from(SVG))
-    .png({ compressionLevel: 9 })
-    .toFile(OUT);
+  await sharp(Buffer.from(SVG)).png({ compressionLevel: 9 }).toFile(OUT);
   console.log(`  ✓ og-default.png (${W}×${H})`);
 }
 

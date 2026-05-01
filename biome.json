@@ -78,6 +78,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["scripts/**/*.{mjs,js,ts}"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
     }
   ]
 }

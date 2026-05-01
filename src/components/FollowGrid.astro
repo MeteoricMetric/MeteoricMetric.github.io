@@ -1,0 +1,87 @@
+---
+// merricstrough.com — verified-accounts CTA cluster.
+// Sources from src/data/accounts.ts → only ships verified accounts.
+import { verifiedAccounts } from '@data/accounts';
+
+const followAccounts = verifiedAccounts.filter((a) => a.showInFollow);
+---
+
+{followAccounts.length > 0 && (
+  <section class="follow" aria-labelledby="follow-heading">
+    <header class="follow__header">
+      <p class="eyebrow">find me elsewhere</p>
+      <h2 id="follow-heading" class="sr-only">Where to find Merric on the rest of the internet</h2>
+    </header>
+    <ul class="follow__grid" role="list">
+      {followAccounts.map((account) => (
+        <li>
+          <a class="follow__pill" href={account.url} rel="me noopener">
+            <span class="follow__platform">{account.platform}</span>
+            <span class="follow__handle">@{account.handle}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .follow {
+    padding-block: var(--space-section);
+    padding-inline: var(--space-6);
+    max-inline-size: var(--width-content);
+    margin-inline: auto;
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  .follow__header {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .follow__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    list-style: none;
+    padding: 0;
+  }
+
+  .follow__pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    text-decoration: none;
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-spring),
+      color var(--duration-fast) var(--ease-out);
+  }
+
+  .follow__pill:hover {
+    background: var(--color-accent-muted);
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+  }
+
+  .follow__platform {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-primary);
+  }
+
+  .follow__handle {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  .follow__pill:hover .follow__handle {
+    color: var(--color-accent);
+  }
+</style>

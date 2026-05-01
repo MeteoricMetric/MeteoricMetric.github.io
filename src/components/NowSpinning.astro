@@ -1,0 +1,160 @@
+---
+// merricstrough.com — Now Spinning widget (per ADR-0002 §Hero meta plane).
+//
+// Three modes (managed via Pages CMS in src/content/now-spinning.json):
+//   - 'live'    — fetches from the Cloudflare Worker (src/data/spotify-config.ts)
+//                 client-side, polls every 30s. Skeleton while loading.
+//   - 'manual'  — renders a fixed track URL pinned by Merric via the CMS.
+//   - 'off'     — hides the widget entirely.
+//
+// v1 ships with the Worker URL not yet configured; component renders nothing
+// until either (a) Worker URL is added + mode = 'live', or (b) mode = 'manual'.
+
+import { nowSpinning } from '@data/site-content';
+
+const { mode, manualTrackUrl: manualUrl } = nowSpinning;
+
+// Worker URL placeholder — populate after deploying the worker (task #10).
+// Keeping in this component for v1; will graduate to src/data/spotify-config.ts
+// once a second consumer needs it.
+const SPOTIFY_WORKER_URL: string | undefined = undefined;
+
+const shouldRender =
+  mode === 'live' ? Boolean(SPOTIFY_WORKER_URL) :
+  mode === 'manual' ? Boolean(manualUrl) :
+  false;
+---
+
+{shouldRender && (
+  <aside
+    class="now-spinning"
+    data-mode={mode}
+    data-worker-url={mode === 'live' ? SPOTIFY_WORKER_URL : undefined}
+    data-manual-url={mode === 'manual' ? manualUrl : undefined}
+    aria-live="polite"
+    aria-label="Currently playing"
+  >
+    {mode === 'manual' && manualUrl ? (
+      <a class="now-spinning__pill" href={manualUrl} rel="noopener">
+        <span class="now-spinning__icon" aria-hidden="true">♪</span>
+        <span class="now-spinning__label">
+          <span class="eyebrow">Now spinning</span>
+          <span class="now-spinning__track">Pinned track on Spotify →</span>
+        </span>
+      </a>
+    ) : (
+      <div class="now-spinning__pill now-spinning__pill--loading" data-state="loading">
+        <span class="now-spinning__icon" aria-hidden="true">♪</span>
+        <span class="now-spinning__label">
+          <span class="eyebrow">Now spinning</span>
+          <span class="now-spinning__track">Checking…</span>
+        </span>
+      </div>
+    )}
+  </aside>
+)}
+
+<style>
+  .now-spinning {
+    /* Positioned by parent (Hero meta plane). Pill is self-contained. */
+  }
+
+  .now-spinning__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    text-decoration: none;
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-spring);
+    max-inline-size: 22rem;
+  }
+
+  .now-spinning__pill:hover {
+    background: var(--color-accent-muted);
+    border-color: var(--color-accent);
+    transform: translateY(-1px);
+  }
+
+  .now-spinning__icon {
+    font-size: var(--font-size-lg);
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  .now-spinning__label {
+    display: grid;
+    gap: 0;
+    min-inline-size: 0;
+  }
+
+  .now-spinning__track {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Skeleton pulse while live mode loads. */
+  .now-spinning__pill[data-state='loading'] .now-spinning__track {
+    color: var(--color-text-subtle);
+    animation: now-spinning-pulse 1.6s var(--ease-in-out) infinite;
+  }
+
+  @keyframes now-spinning-pulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 0.8; }
+  }
+</style>
+
+<script>
+  // Live-mode polling. Hydrates only when data-mode='live' AND data-worker-url is set.
+  // Polls every 30s; bails silently on any error (component degrades to skeleton).
+  const widget = document.querySelector<HTMLElement>('.now-spinning[data-mode="live"]');
+  const workerUrl = widget?.dataset.workerUrl;
+
+  type NowPlaying = {
+    isPlaying: boolean;
+    title?: string;
+    artist?: string;
+    songUrl?: string;
+  };
+
+  if (widget && workerUrl) {
+    const trackEl = widget.querySelector<HTMLElement>('.now-spinning__track');
+    const pillEl = widget.querySelector<HTMLAnchorElement>('.now-spinning__pill');
+
+    const render = (data: NowPlaying) => {
+      if (!trackEl || !pillEl) return;
+      pillEl.removeAttribute('data-state');
+      if (data.isPlaying && data.title) {
+        trackEl.textContent = `${data.title}${data.artist ? ' — ' + data.artist : ''}`;
+        if (data.songUrl) (pillEl as HTMLAnchorElement).href = data.songUrl;
+      } else {
+        trackEl.textContent = 'Not playing right now';
+      }
+    };
+
+    const fetchOnce = async () => {
+      try {
+        const res = await fetch(workerUrl, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as NowPlaying;
+        render(data);
+      } catch {
+        // Silent — widget keeps last known good state or skeleton.
+      }
+    };
+
+    fetchOnce();
+    const interval = setInterval(fetchOnce, 30_000);
+
+    document.addEventListener('astro:before-swap', () => clearInterval(interval), { once: true });
+  }
+</script>

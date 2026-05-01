@@ -1,0 +1,72 @@
+---
+// merricstrough.com — Identity section.
+// Sources tagline + blurb from src/content/identity.json (Pages-CMS-managed),
+// surfaced via the typed loader at @data/site-content.
+import { identity } from '@data/site-content';
+
+const { tagline, blurb } = identity;
+---
+
+<section class="identity" aria-labelledby="identity-heading">
+  <div class="identity__inner">
+    <img
+      src="/avatar.jpg"
+      alt=""
+      class="identity__avatar"
+      width="160"
+      height="160"
+      loading="eager"
+      decoding="async"
+    />
+    <p class="eyebrow identity__eyebrow">about</p>
+    <h2 id="identity-heading" class="identity__tagline">{tagline}</h2>
+    {blurb && <p class="identity__blurb">{blurb}</p>}
+  </div>
+</section>
+
+<style>
+  .identity {
+    padding-block: var(--space-section);
+    padding-inline: var(--space-6);
+    display: grid;
+    place-items: center;
+  }
+
+  .identity__inner {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    gap: var(--space-4);
+    max-inline-size: 60ch;
+  }
+
+  .identity__avatar {
+    width: 9rem;
+    height: 9rem;
+    border-radius: var(--radius-circle);
+    background: var(--color-surface-1);
+    box-shadow: var(--shadow-lg), 0 0 0 1px var(--color-border);
+    margin-block-end: var(--space-2);
+    object-fit: cover;
+  }
+
+  .identity__eyebrow {
+    margin-block-end: var(--space-1);
+  }
+
+  .identity__tagline {
+    font-size: var(--font-size-2xl);
+    line-height: var(--line-height-snug);
+    letter-spacing: var(--tracking-tight);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-primary);
+    text-wrap: balance;
+  }
+
+  .identity__blurb {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-muted);
+    line-height: var(--line-height-relaxed);
+    text-wrap: pretty;
+  }
+</style>

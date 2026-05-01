@@ -1,0 +1,55 @@
+---
+// merricstrough.com — Projects section. Renders ProjectCard list from
+// the typed projects collection (src/content/projects/*.md).
+import { getCollection, type CollectionEntry } from 'astro:content';
+import ProjectCard from '@components/ProjectCard.astro';
+
+const projects: CollectionEntry<'projects'>[] = await getCollection('projects');
+projects.sort(
+  (a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) =>
+    b.data.updated.getTime() - a.data.updated.getTime(),
+);
+---
+
+<section class="projects" aria-labelledby="projects-heading">
+  <header class="projects__header">
+    <p class="eyebrow">what i'm working on</p>
+    <h2 id="projects-heading">Things in flight.</h2>
+  </header>
+
+  <div class="projects__grid">
+    {projects.map((project: CollectionEntry<'projects'>) => <ProjectCard project={project} />)}
+  </div>
+</section>
+
+<style>
+  .projects {
+    padding-block: var(--space-section);
+    padding-inline: var(--space-6);
+    max-inline-size: var(--width-content);
+    margin-inline: auto;
+    display: grid;
+    gap: var(--space-12);
+  }
+
+  .projects__header {
+    display: grid;
+    gap: var(--space-2);
+    text-align: start;
+    max-inline-size: 50ch;
+  }
+
+  .projects__header h2 {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text-primary);
+    text-wrap: balance;
+  }
+
+  .projects__grid {
+    display: grid;
+    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  }
+</style>

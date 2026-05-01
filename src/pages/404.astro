@@ -1,0 +1,83 @@
+---
+// merricstrough.com — 404 page.
+// GitHub Pages serves /404.html for any path that doesn't resolve to a
+// real file or route. Astro builds src/pages/404.astro to dist/404.html.
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="404 — not the page you were looking for"
+  description="The page you tried to reach doesn't exist (or isn't built yet)."
+>
+  <main id="main-content" class="not-found">
+    <p class="eyebrow">404 / signal lost</p>
+    <h1>Wrong orbit.</h1>
+    <p class="lead">
+      That page isn't here. Maybe it moved, maybe it was never built, maybe you
+      were aiming at a different star.
+    </p>
+    <p class="cta">
+      <a href="/">Take me back to the landing →</a>
+    </p>
+  </main>
+</BaseLayout>
+
+<style>
+  .not-found {
+    min-block-size: 70vh;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    padding: var(--space-section) var(--space-6);
+    gap: var(--space-6);
+  }
+
+  .not-found .eyebrow {
+    margin-block-end: var(--space-2);
+  }
+
+  .not-found h1 {
+    font-size: var(--font-size-display);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--tracking-tight);
+    background: linear-gradient(
+      180deg,
+      var(--color-text-primary) 0%,
+      var(--color-text-muted) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .not-found .lead {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-muted);
+    max-inline-size: 50ch;
+    margin-inline: auto;
+  }
+
+  .not-found .cta {
+    margin-block-start: var(--space-4);
+    font-size: var(--font-size-lg);
+    font-weight: var(--weight-medium);
+  }
+
+  .not-found .cta a {
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-pill);
+    background: var(--color-accent-muted);
+    border: 1px solid var(--color-accent);
+    text-decoration: none;
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-spring);
+    display: inline-block;
+  }
+
+  .not-found .cta a:hover {
+    background: var(--color-accent);
+    color: var(--color-canvas);
+    transform: translateY(-2px);
+  }
+</style>

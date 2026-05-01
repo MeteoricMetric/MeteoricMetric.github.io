@@ -1,0 +1,158 @@
+---
+// merricstrough.com — shared stub layout for the sub-route pages
+// (/minecraft, /art, /youtube, /twitch). Each is a thin showcase page
+// pointing at the real external account + space to grow into a richer
+// experience over time. Per ADR-0003 §subdomain link handling: ship
+// these in this repo for v2; extract to sibling subdomain repos in
+// Phase 4 once content depth justifies the split.
+interface Props {
+  eyebrow: string;
+  headline: string;
+  lead: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  secondaryLabel?: string;
+  secondaryUrl?: string;
+}
+
+const { eyebrow, headline, lead, ctaLabel, ctaUrl, secondaryLabel, secondaryUrl } = Astro.props;
+---
+
+<main id="main-content" class="route-stub">
+  <div class="route-stub__inner">
+    <p class="eyebrow route-stub__eyebrow">{eyebrow}</p>
+    <h1 class="route-stub__headline">{headline}</h1>
+    <p class="route-stub__lead">{lead}</p>
+
+    <div class="route-stub__ctas">
+      <a class="route-stub__cta route-stub__cta--primary" href={ctaUrl} rel="noopener">
+        {ctaLabel}
+      </a>
+      {secondaryLabel && secondaryUrl && (
+        <a class="route-stub__cta route-stub__cta--secondary" href={secondaryUrl} rel="noopener">
+          {secondaryLabel}
+        </a>
+      )}
+    </div>
+
+    <slot />
+
+    <p class="route-stub__back">
+      <a href="/">← back to merricstrough.com</a>
+    </p>
+  </div>
+</main>
+
+<style>
+  .route-stub {
+    min-block-size: 80vh;
+    min-block-size: 80dvh;
+    display: grid;
+    place-content: center;
+    padding: var(--space-section) var(--space-6);
+  }
+
+  .route-stub__inner {
+    display: grid;
+    gap: var(--space-5);
+    text-align: center;
+    max-inline-size: 56rem;
+    margin-inline: auto;
+  }
+
+  .route-stub__eyebrow {
+    color: var(--color-accent);
+  }
+
+  .route-stub__headline {
+    font-size: var(--font-size-4xl);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--tracking-tight);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-primary);
+    text-wrap: balance;
+    background: linear-gradient(
+      180deg,
+      var(--color-text-primary) 0%,
+      color-mix(in oklch, var(--color-text-primary) 70%, var(--color-text-muted)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .route-stub__lead {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-muted);
+    line-height: var(--line-height-relaxed);
+    max-inline-size: 50ch;
+    margin-inline: auto;
+    text-wrap: pretty;
+  }
+
+  .route-stub__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    justify-content: center;
+    margin-block-start: var(--space-5);
+  }
+
+  .route-stub__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-pill);
+    font-weight: var(--weight-medium);
+    text-decoration: none;
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-spring),
+      color var(--duration-fast) var(--ease-out);
+  }
+
+  .route-stub__cta--primary {
+    background: var(--color-accent);
+    color: var(--color-canvas);
+    border: 1px solid var(--color-accent);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .route-stub__cta--primary:hover {
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    transform: translateY(-2px);
+  }
+
+  .route-stub__cta--secondary {
+    background: var(--color-accent-muted);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+  }
+
+  .route-stub__cta--secondary:hover {
+    background: var(--color-accent);
+    color: var(--color-canvas);
+    transform: translateY(-2px);
+  }
+
+  .route-stub__back {
+    margin-block-start: var(--space-12);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  .route-stub__back a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: oklch(72% 0.015 285 / 30%);
+    text-underline-offset: 0.2em;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .route-stub__back a:hover {
+    color: var(--color-accent);
+  }
+</style>

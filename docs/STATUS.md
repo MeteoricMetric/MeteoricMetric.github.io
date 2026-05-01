@@ -1,13 +1,20 @@
 # Session resume — merricstrough.com v2
 
 > **Living doc.** Update on the way out of every session so the next session (Claude or human) can pick up cold without context loss.
-> Last updated: 2026-05-01 by Claude (Shane operating)
+> Last updated: 2026-05-01 by Claude (Shane operating, post-power-cycle)
 
 ---
 
 ## Where we are
 
-v2 redesign **complete in repo, 22 commits on local `main`, push pending Shane's collaborator-invite acceptance** (see Section "Push blocker" below). Once push lands, GitHub Actions auto-deploys the new site within ~1-2 min and v1 → v2 cutover happens silently.
+**🚀 v2 IS LIVE at https://merricstrough.com.** Verified via curl — landing renders the Astro hero, Identity, Projects, FollowGrid, Footer. Last-Modified timestamps confirm fresh deploy.
+
+26 commits on `origin/main`. All three core workflows green on the latest commit:
+- ✅ CI (Lint + Astro check + build)
+- ✅ CodeQL (security scan)
+- ✅ Deploy to GitHub Pages (publishes dist/ via deploy-pages action)
+
+⚠️ The legacy `pages build and deployment` workflow keeps failing on every push — see "Pages source still on legacy" below for the one-click fix.
 
 Build: `npm run build` produces 6 pages in ~2s (`/`, `/404`, `/minecraft`, `/art`, `/youtube`, `/twitch`) plus `sitemap-index.xml` + `sitemap-0.xml`.
 Lint: `npm run lint` — 0 errors, 0 warnings.
@@ -18,32 +25,24 @@ ADRs accepted and committed: `docs/decisions/0001-adopt-astro-typescript-stack.m
 
 ---
 
-## Push blocker — needs Shane action
+## Pages source still on legacy — Shane UI flip (~30 seconds)
 
-The 22 local commits can't push because `shane-thomas-strough` doesn't have Write access on `MeteoricMetric/MeteoricMetric.github.io` yet. Two possible reasons:
+GitHub Pages still has source = "branch: main, path: /" (the v1 default). The Actions deploy workflow publishes correctly anyway because `deploy-pages@v4` overrides the source via the artifact API. But the LEGACY `pages build and deployment` workflow auto-runs on every push, tries to Jekyll-parse the `.astro` files, fails noisily, and clutters the Actions tab with red badges.
 
-**1. Collaborator invitation pending acceptance.** GitHub sends an email + in-app notification when a collaborator is added; the invitee must accept it before the access takes effect.
-- Visit https://github.com/notifications OR check email from `noreply@github.com`
-- OR go directly to https://github.com/MeteoricMetric/meteoricmetric.github.io/invitations and accept
+**One-click fix:** Settings → Pages → "Build and deployment" → Source: **GitHub Actions** (not "Deploy from a branch"). Save. Done. Legacy workflow stops, Actions deploy is now the canonical publisher.
 
-**2. Stale cached credentials.** If you accepted the invite but push still fails:
-- On Windows, open "Credential Manager" (search in Start menu) → Windows Credentials → look for `git:https://github.com` entries → remove them
-- Next `git push` will re-prompt for auth and Git Credential Manager will mint fresh credentials
+While in Settings → Pages, also flip:
+- **"Enforce HTTPS"** to ON. Currently `https_enforced: false` per the Pages API; cert is approved through 2026-07-18 so HTTPS works, just not enforced.
 
-After either fix, retry: `git push origin main` from `C:\Users\shane\merricstrough-com`. Should succeed.
+I tried to do these via the GitHub API (`gh api -X PUT repos/.../pages -f build_type=workflow`) but got 404 — my OAuth token doesn't have the Pages-admin scope. UI is the simplest path.
 
 ---
 
-## To unblock the live deploy (Shane — UI-only, ~10 min total, AFTER push works)
+## Other Shane UI tasks (~5 min total)
 
-1. **GitHub Pages source.** Repo → Settings → Pages → "Build and deployment" → Source: **GitHub Actions** (NOT "Deploy from a branch"). The `deploy.yml` workflow won't publish without this.
-2. **Verify custom domain stays bound** after the first Actions deploy: Settings → Pages still shows `merricstrough.com`, "Enforce HTTPS" checked. (Should stick automatically because `public/CNAME` is in every build.)
 3. **Dependabot alerts + security updates ON.** Settings → Code security → both toggles ON.
-4. **Private vulnerability reporting ON.** Settings → Code security → enable. (This is what `.well-known/security.txt`'s contact URL points at.)
+4. **Private vulnerability reporting ON.** Settings → Code security → enable. (`.well-known/security.txt` contact URL routes here.)
 5. **Branch protection on `main`** (per CLAUDE.md §5.2 "when project matures"). Settings → Branches → Add rule for `main`: require PR before merging, require status checks `verify` (CI) + `analyze (javascript-typescript)` (CodeQL) + `audit` (Lighthouse), require branches up to date.
-6. **Watch the first deploy.** Actions tab → first push triggers ci, codeql, deploy. Lighthouse runs only on PRs, not first push. Expect ~1-2 min to live.
-
-After step 1 succeeds, every push to `main` deploys automatically.
 
 ---
 
@@ -119,12 +118,33 @@ Do this in the `shanestrough-com` repo (separate Claude session). The exact JSON
 
 ---
 
+## Open Dependabot PRs (rebase queued, awaiting CI)
+
+Six action-version major bumps opened immediately after first push. All commented `@dependabot rebase` to pick up the typecheck + lint fixes that landed on main after the PRs were created. Once Dependabot rebases (~5-10 min), CI re-runs. Expected outcome:
+
+| PR | Bump | Risk | Action |
+|----|------|------|--------|
+| #1 | `actions/setup-node` 4 → 6 | Low | Merge if green |
+| #2 | `github/codeql-action` 3 → 4 | Low | Merge if green |
+| #3 | `actions/checkout` 4 → 6 | Low | Merge if green |
+| #4 | `actions/upload-pages-artifact` 3 → 5 | Med (2-major jump; works as a set with #5/#6) | Merge as a trio if all green |
+| #5 | `actions/configure-pages` 5 → 6 | Med | Merge as part of trio |
+| #6 | `actions/deploy-pages` 4 → 5 | Med | Merge as part of trio |
+| ~~#7~~ | ~~typescript 5.9.3 → 6.0.3~~ | High (major; Astro 6 tsconfig presets target TS 5.x) | Closed via `@dependabot ignore this major version` |
+
+To merge once green: `gh pr merge <num> -R MeteoricMetric/MeteoricMetric.github.io --merge` (or `--squash` if you prefer flatter history).
+
+---
+
 ## Phase 2 polish (any future session, no blockers)
 
-- [ ] **Raster favicon fallbacks** for Safari iOS + very-old browsers: generate `apple-touch-icon.png` (180×180), `favicon.ico`, `icon-192.png`, `icon-512.png` (maskable) from the existing `favicon.svg`. Add a `npm run favicons` script using `sharp` (already a transitive dep via Astro). Re-add the corresponding `<link>` lines in `BaseHead.astro` (currently behind a TODO comment).
-- [ ] **OG default image** at `public/og-default.png` (1200×630). Currently social cards work but show no preview image. Options: hand-make a branded one in any image editor, OR programmatic generation via `@vercel/og` / `astro-og-canvas`. Should match the dark canvas + Geist headline + accent.
-- [ ] **Tighten CSP.** Currently no Content-Security-Policy meta tag at all. Astro 6 has `experimental.csp` with auto-hashed inline scripts/styles — try enabling it. Fallback: add a permissive meta tag with `'unsafe-inline'` for scripts/styles + `connect-src` allowlist for the Spotify Worker.
-- [ ] **Delete `index.html` + `avatar.jpg` from repo root** once the first GitHub Actions deploy is verified working. They're v1 holdovers; Astro builds replacements into `dist/`. Defer until v2 is confirmed live to avoid taking the live site dark mid-cutover.
+Items marked ✓ landed during this session.
+
+- ✓ **Raster favicon fallbacks** — `npm run favicons` generates apple-touch-icon (180), favicon-16, favicon-32, icon-192, icon-512 PNGs from `public/favicon.svg` via sharp. BaseHead wires them all.
+- ✓ **OG default image** — `npm run og` composes a 1200×630 PNG with brand mark + headline + tagline. ~93KB. BaseHead references `/og-default.png`.
+- ✓ **Baseline CSP** via `<meta http-equiv>` — restricts default-src to self, fonts to self+Google Fonts, connect-src to self + workers.dev (for Spotify), upgrades insecure requests.
+- [ ] **Tighten CSP further.** Current CSP allows `'unsafe-inline'` for scripts + styles because Astro 6 ships scoped `<style>` + view-transition `<script>` inline. Astro 6 has `experimental.csp` with auto-hashed inline assets — try enabling it to drop unsafe-inline.
+- [ ] **Delete `index.html` + `avatar.jpg` from repo root** — v1 holdovers, no longer served (Actions deploy wins). Safe to remove now that v2 is verified live.
 - [ ] **Light mode tokens** per ADR-0002 §Open items. Add `prefers-color-scheme: light` overrides to `tokens.css`, expand `data-theme` toggle.
 - [ ] **Visual regression baselines** — Playwright `tests/visual.spec.ts` currently saves screenshots but doesn't pixel-match. Lock in baselines once the design is confirmed; turn on `expect(page).toHaveScreenshot()` assertions.
 - [ ] **Hero canvas third + fourth presets** — `particle-drift` and `meridian-grid` per ADR-0002 §Hero composition. Currently shipping just `starfield` + `wireframe-planet`.

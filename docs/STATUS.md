@@ -110,6 +110,30 @@ If something doesn't work, fall back to **github.dev** — press `.` while viewi
 
 ---
 
+## Scheduled maintenance routines (active)
+
+Three remote Claude Code agents are scheduled via the `/schedule` system. Each runs cold against a fresh clone of the repo, reports back, optionally opens a PR. Manage / disable / edit prompts via the URLs below.
+
+| Routine | Cadence | Cron (UTC) | Next run | Manage URL |
+|---|---|---|---|---|
+| **Identity health check** | Quarterly | `0 9 1 1,4,7,10 *` (1st of Jan/Apr/Jul/Oct, 09:00 UTC) | 2026-07-01 09:06 UTC | [trig_01S1FENQfgYEykaJdMyuMGyQ](https://claude.ai/code/routines/trig_01S1FENQfgYEykaJdMyuMGyQ) |
+| **Content freshness audit** | Quarterly | `0 9 15 2,5,8,11 *` (15th of Feb/May/Aug/Nov, 09:00 UTC) | 2026-05-15 09:05 UTC | [trig_01Aj8ByMBb8325ofBbSwRg7G](https://claude.ai/code/routines/trig_01Aj8ByMBb8325ofBbSwRg7G) |
+| **Annual security posture review** | Yearly | `0 9 1 5 *` (May 1, 09:00 UTC) | 2027-05-01 09:01 UTC (v2 anniversary) | [trig_01QVszkJjzKbwqarWMKvnv7i](https://claude.ai/code/routines/trig_01QVszkJjzKbwqarWMKvnv7i) |
+
+**What each does:**
+
+- **Identity health** — fetches every `rel=me` URL on the live site + the JSON-LD `sameAs` array, verifies HTTP 2xx, flags 404s / handle renames / cross-host redirects. Validates the JSON-LD via Google Rich Results Test + rel=me bidirectionality via IndieWebify. Auto-opens a PR for mechanical URL fixes; flags handle renames for human review.
+- **Content freshness** — checks `/now` page, all `status: active` projects, identity blurb for staleness (90-day threshold). Probes verified accounts for recent activity signals. Returns a conversational summary, NOT a punch list. Default action is REPORT, never auto-commit.
+- **Annual security review** — sweeps the §5.1 threat model, `.well-known/security.txt` expiry, domain renewal, TLS cert, CSP appropriateness, §5.3 PII override survey, CodeQL/Dependabot status, branch protection ruleset, and prompts Shane to verbally confirm offline 2FA recovery codes. Severity-tagged report.
+
+**Schedule offsetting** — Identity health fires the 1st of Jan/Apr/Jul/Oct; Content freshness fires the 15th of Feb/May/Aug/Nov. Each quarter has one report mid-month and one at the start of the following quarter, so reports never dogpile.
+
+**Adjusting / disabling** — click any URL above. Routines can be edited (prompt + cadence + tools), disabled (paused indefinitely), or run-now-on-demand. Cannot be deleted via API; if you want one gone, disable + ignore (or delete via https://claude.ai/code/routines).
+
+**Hugging Face MCP connector** is auto-attached to each routine (account-default). None of these audits use it; harmless. Detach via the manage URL if you prefer it cleaner.
+
+---
+
 ## Cross-repo follow-up — shanestrough.com inverse (separate session)
 
 Per CLAUDE.md §10.3 + ADR-0003, `shanestrough.com` needs the inverse cross-link to fully validate the family graph:

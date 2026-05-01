@@ -148,7 +148,7 @@ export function createParticleDrift(opts: HeroCanvasOptions): HeroCanvasControll
   }
 
   sizeToCss();
-  particles = seedParticles(cw, ch, accentColor);
+  particles = seedParticles(cw, ch);
   document.addEventListener('visibilitychange', onVisibility);
 
   if (reducedMotion) draw();

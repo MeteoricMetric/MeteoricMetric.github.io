@@ -1,0 +1,169 @@
+# merricstrough.com — Pages CMS configuration
+# https://pagescms.org/docs/configuration/
+#
+# Per ADR-0001 — Pages CMS (hosted at app.pagescms.org) is the primary
+# admin layer. Merric logs in with his GitHub account, sees the form UI
+# defined below, edits → Pages CMS commits to main → GitHub Actions
+# rebuilds → live in ~30s.
+#
+# Per ADR-0002 — the hero composition is a three-plane system: background
+# plane (image | canvas | layered) + type plane + meta plane.
+# Per ADR-0003 — family graph + structural data lives in src/data/ (typed
+# code), NOT here. This CMS only manages CONTENT, not structure.
+
+media:
+  - name: hero-images
+    label: Hero images
+    input: public/hero
+    output: /hero
+    extensions: [jpg, jpeg, png, webp, avif]
+    categories: [image]
+
+  - name: og-images
+    label: Open Graph images
+    input: public/og
+    output: /og
+    extensions: [jpg, jpeg, png, webp]
+    categories: [image]
+
+content:
+  # ── Hero composition (ADR-0002 §Hero composition system) ──────────────
+  - name: hero
+    label: Hero
+    type: file
+    path: src/content/hero.json
+    format: json
+    fields:
+      - name: backgroundMode
+        label: Background mode
+        type: select
+        description: |
+          image = full-bleed image only.
+          canvas = generative preset only.
+          layered (recommended) = image as base + canvas overlay at low opacity.
+        options:
+          values:
+            - { value: image,    label: 'Image only' }
+            - { value: canvas,   label: 'Canvas preset only' }
+            - { value: layered,  label: 'Layered (image + canvas overlay) — default' }
+        default: layered
+
+      - name: backgroundImage
+        label: Background image
+        type: image
+        description: 'Used when mode is image or layered. Auto-optimized to AVIF/WebP/responsive srcset by Astro.'
+        path: public/hero
+        required: false
+
+      - name: canvasPreset
+        label: Canvas preset
+        type: select
+        description: 'Used when mode is canvas or layered. Renders behind/over the image.'
+        options:
+          values:
+            - { value: starfield,        label: 'Starfield (MeteoricMetric default)' }
+            - { value: wireframe-planet, label: 'Wireframe planet' }
+        default: starfield
+
+      - name: accentOverride
+        label: Accent color override (optional)
+        type: string
+        description: 'OKLCH or hex. Leave blank to use the locked signature accent #8b6bff.'
+        pattern: '^(#[0-9a-fA-F]{3,8}|oklch\([^)]+\)|)$'
+        required: false
+
+      - name: headline
+        label: Headline
+        type: string
+        description: 'Display headline. Geist Sans, balanced wrap.'
+        required: true
+
+      - name: subhead
+        label: Subhead
+        type: text
+        description: 'One or two sentences below the headline.'
+        required: false
+
+      - name: ctas
+        label: CTA links
+        type: object
+        list: true
+        description: 'Primary action links surfaced in the hero meta plane.'
+        fields:
+          - { name: label, label: Label, type: string, required: true }
+          - { name: url,   label: URL,   type: string, required: true, pattern: '^https?://' }
+          - { name: kind,  label: Kind,  type: select, options: { values: [primary, secondary, ghost] }, default: primary }
+
+  # ── Now Spinning widget (ADR-0002 §Hero meta plane) ───────────────────
+  - name: now-spinning
+    label: Now Spinning
+    type: file
+    path: src/content/now-spinning.json
+    format: json
+    fields:
+      - name: mode
+        label: Mode
+        type: select
+        description: |
+          live = pulls from Spotify Worker (auto-updates).
+          manual = pin a specific track URL.
+          off = hide the widget.
+        options:
+          values:
+            - { value: live,    label: 'Live (pulls from Spotify)' }
+            - { value: manual,  label: 'Manual (pinned track)' }
+            - { value: off,     label: 'Off' }
+        default: live
+
+      - name: manualTrackUrl
+        label: Manual track URL
+        type: string
+        description: 'Used only when mode is manual. Spotify track URL.'
+        pattern: '^https://open\.spotify\.com/'
+        required: false
+
+  # ── Identity copy (the about-Merric paragraph) ────────────────────────
+  - name: identity
+    label: Identity / About blurb
+    type: file
+    path: src/content/identity.json
+    format: json
+    fields:
+      - name: tagline
+        label: Tagline
+        type: string
+        description: 'Short identity line below the avatar.'
+        required: true
+
+      - name: blurb
+        label: Blurb
+        type: text
+        description: 'A few sentences about who he is and what he is into right now.'
+        required: true
+
+  # ── Projects (the things he's working on) ─────────────────────────────
+  - name: projects
+    label: Projects
+    type: collection
+    path: src/content/projects
+    format: yaml-frontmatter
+    extension: md
+    filename: '{slug}.md'
+    view:
+      fields: [title, status, updated]
+      primary: title
+      sort: [{ field: updated, direction: desc }]
+    fields:
+      - { name: title,    label: Title,    type: string, required: true }
+      - { name: slug,     label: Slug,     type: string, required: true, pattern: '^[a-z0-9-]+$' }
+      - { name: status,   label: Status,   type: select, options: { values: [active, paused, shipped, exploring] }, default: active }
+      - { name: summary,  label: Summary,  type: text,   required: true }
+      - { name: url,      label: External URL, type: string, required: false, pattern: '^https?://' }
+      - { name: image,    label: Cover image,  type: image, path: public/projects, required: false }
+      - { name: updated,  label: Last updated, type: date, required: true }
+      - { name: tags,     label: Tags,     type: string, list: true }
+      - { name: body,     label: Body,     type: rich-text }
+
+settings:
+  content:
+    merge: true

@@ -18,7 +18,7 @@ export type Account = Readonly<{
 }>;
 
 export const accounts: readonly Account[] = [
-  // ── Verified by Shane on 2026-04-30 ────────────────────────────────────
+  // ── Verified ─────────────────────────────────────────────────────────────
   {
     platform: 'GitHub',
     url: 'https://github.com/MeteoricMetric',
@@ -33,29 +33,47 @@ export const accounts: readonly Account[] = [
     verified: true,
     showInFollow: true,
   },
+  {
+    platform: 'Spotify',
+    url: 'https://open.spotify.com/user/metric1720',
+    handle: 'metric1720',
+    verified: true,
+    showInFollow: true,
+  },
 
-  // ── Awaiting Merric's info (task #9 — due 2026-05-01) ──────────────────
-  // TODO(merric-info): replace placeholder URLs with verified real URLs.
-  // Per CLAUDE.md §5.3 — confirm display name on each platform does NOT
-  // expose his real last name before flipping `verified: true`.
+  // ── Pending — see notes ──────────────────────────────────────────────────
+
+  // YouTube — channel URL not yet provided. When Merric creates / shares it,
+  // confirm the @handle does NOT include his real last name (per §5.3),
+  // then flip verified: true + add showInFollow: true.
   {
     platform: 'YouTube',
     url: 'https://www.youtube.com/@TODO',
     handle: 'TODO',
     verified: false,
   },
-  {
-    platform: 'Spotify',
-    url: 'https://open.spotify.com/user/TODO',
-    handle: 'TODO',
-    verified: false,
-  },
+
+  // Discord — Merric's current handle is `roblox_1720`, but Shane flagged it
+  // as a possible rename ("we could make a new one or change it"). Discord
+  // usernames don't have a public-profile URL pattern (only numeric IDs do),
+  // so even when verified, this is more useful as a friend-add hint than a
+  // FollowGrid pill. Hold off until either (a) a brand-aligned handle is
+  // chosen, or (b) we set up a Discord community server with an invite URL.
   {
     platform: 'Discord',
-    url: 'https://discord.gg/TODO',
-    handle: 'TODO',
+    url: 'https://discord.com/users/TODO',
+    handle: 'roblox_1720',
     verified: false,
   },
+
+  // Steam — Merric's current Steam custom URL is `steamcommunity.com/id/merricstrough`.
+  // The custom slug is his FULL LAST NAME, which trips CLAUDE.md §5.3
+  // (no full last name on visible page content; the URL would expose it
+  // either in the FollowGrid label or in JSON-LD sameAs and search results).
+  // Suggested fix: change the Steam custom URL to `meteoricmetric` or
+  // `metric1720` via Profile → Edit Profile → Custom URL on steamcommunity.com.
+  // Account + items + friends are preserved across the rename. Once renamed,
+  // update the URL + handle below + flip verified: true.
   {
     platform: 'Steam',
     url: 'https://steamcommunity.com/id/TODO',
@@ -63,6 +81,14 @@ export const accounts: readonly Account[] = [
     verified: false,
   },
 ];
+
+// ── Notes (not consumed by code) ─────────────────────────────────────────
+//
+// Alt Twitch (metric724) — Shane mentioned a second Twitch account exists.
+// Single Twitch link in the FollowGrid is cleaner UX (avoids "which one do
+// I follow?" confusion). Keeping `meteoricmetric` as the public-facing one
+// here. If the alt is the actively-streamed one, swap them and demote
+// meteoricmetric to a private alt.
 
 // Convenience: filter once at module scope; consumers iterate this directly.
 export const verifiedAccounts: readonly Account[] = accounts.filter((a) => a.verified);

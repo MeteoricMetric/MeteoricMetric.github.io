@@ -36,7 +36,7 @@ jobs:
       # Node version is the single source of truth in .nvmrc (22.18.0).
       # setup-node's npm cache key is keyed off package-lock.json automatically.
       - name: Setup Node.js (from .nvmrc)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'

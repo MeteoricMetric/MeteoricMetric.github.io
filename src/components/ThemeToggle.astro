@@ -1,0 +1,159 @@
+---
+// merricstrough.com — manual theme toggle.
+// Sits in the footer; cycles through 3 states: system → light → dark → system.
+// Persists choice in localStorage. The inline init script in BaseHead.astro
+// reads the saved choice BEFORE first paint to avoid flash-of-wrong-theme.
+//
+// "system" = no data-theme attribute, prefers-color-scheme decides.
+// "light" / "dark" = explicit data-theme on <html>, wins over system pref.
+---
+
+<button
+  class="theme-toggle"
+  type="button"
+  aria-label="Toggle color theme"
+  title="Toggle theme — system / light / dark"
+  data-theme-toggle
+>
+  <span class="theme-toggle__icon theme-toggle__icon--system" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="14" rx="2" />
+      <line x1="8" y1="20" x2="16" y2="20" />
+      <line x1="12" y1="18" x2="12" y2="20" />
+    </svg>
+  </span>
+  <span class="theme-toggle__icon theme-toggle__icon--light" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <line x1="12" y1="2" x2="12" y2="5" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+      <line x1="4.93" y1="4.93" x2="7.05" y2="7.05" />
+      <line x1="16.95" y1="16.95" x2="19.07" y2="19.07" />
+      <line x1="2" y1="12" x2="5" y2="12" />
+      <line x1="19" y1="12" x2="22" y2="12" />
+      <line x1="4.93" y1="19.07" x2="7.05" y2="16.95" />
+      <line x1="16.95" y1="7.05" x2="19.07" y2="4.93" />
+    </svg>
+  </span>
+  <span class="theme-toggle__icon theme-toggle__icon--dark" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  </span>
+  <span class="theme-toggle__label">
+    <span class="theme-toggle__label-text" data-theme-label>System</span>
+  </span>
+</button>
+
+<style>
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-2xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    cursor: pointer;
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+  }
+
+  .theme-toggle:hover {
+    background: var(--color-surface-1);
+    border-color: var(--color-border-strong);
+    color: var(--color-text-primary);
+  }
+
+  /* Show the icon matching the current data-theme-mode attribute on the
+     toggle button itself (set by the script). Only one icon is visible at a
+     time; the others stay in the DOM for instant swap on click. */
+  .theme-toggle__icon {
+    display: none;
+    color: var(--color-accent-text);
+  }
+
+  [data-theme-mode='system'] .theme-toggle__icon--system,
+  [data-theme-mode='light']  .theme-toggle__icon--light,
+  [data-theme-mode='dark']   .theme-toggle__icon--dark {
+    display: inline-flex;
+  }
+</style>
+
+<script>
+  // Cycles: system → light → dark → system.
+  // Stores the choice in localStorage; on first paint the inline init script
+  // in BaseHead applies the saved preference before any styles render.
+  type ThemeMode = 'system' | 'light' | 'dark';
+
+  const STORAGE_KEY = 'merric.theme';
+  const ORDER: ThemeMode[] = ['system', 'light', 'dark'];
+  const LABELS: Record<ThemeMode, string> = {
+    system: 'System',
+    light: 'Light',
+    dark: 'Dark',
+  };
+
+  function applyMode(mode: ThemeMode): void {
+    const html = document.documentElement;
+    if (mode === 'system') {
+      html.removeAttribute('data-theme');
+    } else {
+      html.setAttribute('data-theme', mode);
+    }
+    // Update toggle button(s) to reflect the new mode.
+    for (const btn of document.querySelectorAll<HTMLElement>('[data-theme-toggle]')) {
+      btn.setAttribute('data-theme-mode', mode);
+      const label = btn.querySelector<HTMLElement>('[data-theme-label]');
+      if (label) label.textContent = LABELS[mode];
+    }
+  }
+
+  function readSavedMode(): ThemeMode {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
+    } catch {
+      // localStorage unavailable (private mode, disabled cookies) — fall through.
+    }
+    return 'system';
+  }
+
+  function nextMode(current: ThemeMode): ThemeMode {
+    const idx = ORDER.indexOf(current);
+    return ORDER[(idx + 1) % ORDER.length] ?? 'system';
+  }
+
+  // Hydrate the toggle on page load — sync the visual state to the saved mode
+  // (which the inline init script in BaseHead already applied to <html>).
+  const initial = readSavedMode();
+  applyMode(initial);
+
+  // Wire click handlers. Multiple toggles on the page (e.g. footer + future
+  // mobile nav) all stay in sync via the shared applyMode() above.
+  for (const btn of document.querySelectorAll<HTMLElement>('[data-theme-toggle]')) {
+    btn.addEventListener('click', () => {
+      const current = (btn.getAttribute('data-theme-mode') as ThemeMode) ?? readSavedMode();
+      const next = nextMode(current);
+      try {
+        localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // ignore — we'll re-attempt on next interaction.
+      }
+      applyMode(next);
+    });
+  }
+
+  // Re-sync on Astro view transitions so the toggle keeps its state across
+  // client-side navigations.
+  document.addEventListener('astro:after-swap', () => {
+    applyMode(readSavedMode());
+  });
+</script>

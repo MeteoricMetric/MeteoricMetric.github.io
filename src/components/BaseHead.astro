@@ -30,6 +30,20 @@ const siteName = 'merricstrough.com';
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="generator" content={Astro.generator} />
+
+{/* No-FOUC theme bootstrap — applies the saved theme to <html> BEFORE first
+    paint so users with a manual theme override (light/dark) never see the
+    wrong colors flash. Reads localStorage; if no manual choice is saved,
+    leaves data-theme unset and lets prefers-color-scheme decide via CSS. */}
+<script is:inline>
+  (function () {
+    try {
+      var t = localStorage.getItem('merric.theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (_) {}
+  })();
+</script>
+
 {/* theme-color flips with system preference so the browser chrome / address bar
     matches the canvas color in either mode. Light fallback in case the browser
     doesn't honor media-scoped theme-color (most modern browsers do). */}

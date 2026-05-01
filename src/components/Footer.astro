@@ -2,19 +2,25 @@
 // merricstrough.com — site footer (per ADR-0003 + CLAUDE.md §10.3).
 // Family attribution to shanestrough.com via rel=me + minimal owner credit.
 import { parent, merric } from '@data/family';
+import ThemeToggle from '@components/ThemeToggle.astro';
 
 const year = new Date().getFullYear();
 ---
 
 <footer role="contentinfo" class="footer">
   <div class="footer__inner">
-    <p class="footer__attribution">
-      Built with my dad &mdash;{' '}
-      <a href={parent.url} rel="me">shanestrough.com</a>
-    </p>
-    <p class="eyebrow footer__meta">
-      &copy; Merric Strough &mdash; {merric.alternateName} &mdash; {year}
-    </p>
+    <div class="footer__col footer__col--start">
+      <p class="footer__attribution">
+        Built with my dad &mdash;{' '}
+        <a href={parent.url} rel="me">shanestrough.com</a>
+      </p>
+      <p class="eyebrow footer__meta">
+        &copy; Merric Strough &mdash; {merric.alternateName} &mdash; {year}
+      </p>
+    </div>
+    <div class="footer__col footer__col--end">
+      <ThemeToggle />
+    </div>
   </div>
 </footer>
 
@@ -30,9 +36,19 @@ const year = new Date().getFullYear();
   .footer__inner {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-5);
     max-inline-size: var(--width-content);
     margin-inline: auto;
+  }
+
+  .footer__col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .footer__col--end {
+    align-items: flex-start;
   }
 
   .footer__attribution {
@@ -48,7 +64,11 @@ const year = new Date().getFullYear();
     .footer__inner {
       flex-direction: row;
       justify-content: space-between;
-      align-items: baseline;
+      align-items: flex-end;
+    }
+
+    .footer__col--end {
+      align-items: flex-end;
     }
   }
 </style>

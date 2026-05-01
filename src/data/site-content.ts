@@ -9,6 +9,7 @@
 
 import heroRaw from '@content/hero.json';
 import identityRaw from '@content/identity.json';
+import nowRaw from '@content/now.json';
 import nowSpinningRaw from '@content/now-spinning.json';
 import { z } from 'astro/zod';
 
@@ -55,3 +56,13 @@ const nowSpinningSchema = z.object({
 
 export type NowSpinning = z.infer<typeof nowSpinningSchema>;
 export const nowSpinning: NowSpinning = nowSpinningSchema.parse(nowSpinningRaw);
+
+// ── /now page (IndieWeb convention — what I'm doing right now) ──────────
+
+const nowSchema = z.object({
+  updated: z.coerce.date(),
+  blurbs: z.array(z.string().min(1)).min(1),
+});
+
+export type Now = z.infer<typeof nowSchema>;
+export const now: Now = nowSchema.parse(nowRaw);

@@ -1,0 +1,128 @@
+---
+// merricstrough.com — /now page (IndieWeb convention).
+// https://nownownow.com — short snapshot of what Merric is doing
+// right now, updated when life shifts. Not a blog. Not a feed.
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { now } from '@data/site-content';
+
+const updatedFmt = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+}).format(now.updated);
+---
+
+<BaseLayout
+  title="Now — what Merric is up to"
+  description="A short snapshot of what Merric is focused on right now. Updates when life shifts."
+>
+  <main id="main-content" class="now">
+    <div class="now__inner">
+      <p class="eyebrow now__eyebrow">a /now page</p>
+      <h1 class="now__headline">What I'm into right now.</h1>
+      <p class="now__updated">As of {updatedFmt}.</p>
+
+      <ul class="now__list" role="list">
+        {now.blurbs.map((blurb) => <li class="now__item">{blurb}</li>)}
+      </ul>
+
+      <p class="now__about">
+        This is a <a href="https://nownownow.com/about" rel="noopener">/now page</a> — a
+        snapshot of what someone is focused on right now. Different from a blog
+        (which is event-driven); /now is a moment in time.
+      </p>
+
+      <p class="now__back">
+        <a href="/">← back to merricstrough.com</a>
+      </p>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .now {
+    min-block-size: 80vh;
+    min-block-size: 80dvh;
+    display: grid;
+    place-content: center;
+    padding: var(--space-section) var(--space-6);
+  }
+
+  .now__inner {
+    display: grid;
+    gap: var(--space-6);
+    max-inline-size: 56rem;
+    margin-inline: auto;
+  }
+
+  .now__eyebrow {
+    color: var(--color-accent-text);
+  }
+
+  .now__headline {
+    font-size: var(--font-size-4xl);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--tracking-tight);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-primary);
+    text-wrap: balance;
+    background: linear-gradient(
+      180deg,
+      var(--color-text-primary) 0%,
+      color-mix(in oklch, var(--color-text-primary) 70%, var(--color-text-muted)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .now__updated {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-subtle);
+    letter-spacing: var(--tracking-wide);
+  }
+
+  .now__list {
+    display: grid;
+    gap: var(--space-5);
+    list-style: none;
+    padding: 0;
+    margin-block-start: var(--space-2);
+  }
+
+  .now__item {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-primary);
+    line-height: var(--line-height-relaxed);
+    padding-inline-start: var(--space-5);
+    position: relative;
+    text-wrap: pretty;
+  }
+
+  .now__item::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0.7em;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-circle);
+    background: var(--color-accent);
+    box-shadow: 0 0 0 4px var(--color-accent-muted);
+  }
+
+  .now__about {
+    margin-block-start: var(--space-8);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-base);
+    padding-block-start: var(--space-6);
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  .now__back {
+    margin-block-start: var(--space-4);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+</style>

@@ -141,6 +141,29 @@ content:
         description: 'A few sentences about who he is and what he is into right now.'
         required: true
 
+  # ── /now page (IndieWeb convention — what I'm doing right now) ────────
+  - name: now
+    label: '/now page'
+    type: file
+    path: src/content/now.json
+    format: json
+    fields:
+      - name: updated
+        label: Updated date
+        type: date
+        description: 'When this snapshot was last refreshed. Bumps the "as of" line on the page.'
+        required: true
+
+      - name: blurbs
+        label: Now blurbs
+        type: string
+        list: true
+        description: |
+          One bullet per current focus. 1-4 sentences each. Drop in the
+          things you'd want a friend to know if they asked "what are you
+          up to lately?" Update whenever life shifts.
+        required: true
+
   # ── Projects (the things he's working on) ─────────────────────────────
   - name: projects
     label: Projects

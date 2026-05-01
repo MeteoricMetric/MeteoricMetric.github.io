@@ -1,0 +1,177 @@
+---
+// merricstrough.com — Hero composition (per ADR-0002 §Hero composition system).
+// Three planes: background (image | canvas | layered) + type + meta.
+import HeroBackground from '@components/HeroBackground.astro';
+import NowSpinning from '@components/NowSpinning.astro';
+import { hero } from '@data/site-content';
+
+const { backgroundMode, backgroundImage, canvasPreset, accentOverride, headline, subhead, ctas } =
+  hero;
+---
+
+<section
+  class="hero"
+  style={accentOverride ? `--color-accent: ${accentOverride};` : undefined}
+  aria-labelledby="hero-headline"
+>
+  <HeroBackground mode={backgroundMode} image={backgroundImage} canvasPreset={canvasPreset} />
+
+  <div class="hero__content">
+    <p class="eyebrow hero__eyebrow">MeteoricMetric</p>
+    <h1 id="hero-headline" class="hero__headline">{headline}</h1>
+    {subhead && <p class="hero__subhead">{subhead}</p>}
+
+    {ctas.length > 0 && (
+      <div class="hero__ctas" role="group" aria-label="Primary actions">
+        {ctas.map((cta) => (
+          <a
+            href={cta.url}
+            class:list={['hero__cta', `hero__cta--${cta.kind}`]}
+            rel={cta.url.startsWith('http') ? 'noopener' : undefined}
+          >
+            {cta.label}
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <div class="hero__meta">
+    <NowSpinning />
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-block-size: 92vh;
+    min-block-size: 92dvh;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    isolation: isolate;
+    view-transition-name: hero;
+  }
+
+  .hero__content {
+    position: relative;
+    z-index: var(--z-raised);
+    display: grid;
+    gap: var(--space-5);
+    padding: var(--space-section) var(--space-6);
+    max-inline-size: 56rem;
+    text-align: center;
+  }
+
+  .hero__eyebrow {
+    color: var(--color-accent);
+    margin-block-end: var(--space-1);
+  }
+
+  .hero__headline {
+    font-size: var(--font-size-display);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--tracking-tight);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-primary);
+    text-wrap: balance;
+    /* Subtle gradient lift — primary text fades into muted at the descenders. */
+    background: linear-gradient(
+      180deg,
+      var(--color-text-primary) 0%,
+      color-mix(in oklch, var(--color-text-primary) 75%, var(--color-text-muted)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero__subhead {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-muted);
+    line-height: var(--line-height-relaxed);
+    max-inline-size: 50ch;
+    margin-inline: auto;
+    text-wrap: pretty;
+  }
+
+  .hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    justify-content: center;
+    margin-block-start: var(--space-6);
+  }
+
+  .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-pill);
+    font-weight: var(--weight-medium);
+    text-decoration: none;
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-spring),
+      color var(--duration-fast) var(--ease-out);
+  }
+
+  .hero__cta--primary {
+    background: var(--color-accent);
+    color: var(--color-canvas);
+    border: 1px solid var(--color-accent);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .hero__cta--primary:hover {
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    transform: translateY(-2px);
+  }
+
+  .hero__cta--secondary {
+    background: var(--color-accent-muted);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+  }
+
+  .hero__cta--secondary:hover {
+    background: var(--color-accent);
+    color: var(--color-canvas);
+    transform: translateY(-2px);
+  }
+
+  .hero__cta--ghost {
+    background: transparent;
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-strong);
+  }
+
+  .hero__cta--ghost:hover {
+    background: var(--color-surface-1);
+    border-color: var(--color-text-muted);
+    transform: translateY(-2px);
+  }
+
+  .hero__meta {
+    position: absolute;
+    inset-block-end: var(--space-6);
+    inset-inline-end: var(--space-6);
+    z-index: var(--z-raised);
+  }
+
+  @media (max-width: 640px) {
+    .hero__meta {
+      position: static;
+      margin-block-start: var(--space-6);
+      display: grid;
+      place-items: center;
+    }
+
+    .hero__content {
+      padding-block-end: var(--space-12);
+    }
+  }
+</style>

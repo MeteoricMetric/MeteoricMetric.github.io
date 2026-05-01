@@ -1,7 +1,11 @@
 ---
-// merricstrough.com — v2 landing page (Phase 0 shell).
-// Phase 1 will replace the body with the full hero composition per ADR-0002.
+// merricstrough.com — v2 landing page.
+// Composition per ADR-0002 §Hero composition system.
 import BaseLayout from '@layouts/BaseLayout.astro';
+import Hero from '@components/Hero.astro';
+import Identity from '@components/Identity.astro';
+import Projects from '@components/Projects.astro';
+import FollowGrid from '@components/FollowGrid.astro';
 ---
 
 <BaseLayout
@@ -9,8 +13,10 @@ import BaseLayout from '@layouts/BaseLayout.astro';
   description="Merric's corner of the internet — Minecraft, art, gaming, and what's next."
   includePersonSchema={true}
 >
+  <Hero />
   <main id="main-content">
-    <h1>v2 in flight</h1>
-    <p class="eyebrow">Phase 1 lands the hero composition per ADR-0002.</p>
+    <Identity />
+    <Projects />
+    <FollowGrid />
   </main>
 </BaseLayout>

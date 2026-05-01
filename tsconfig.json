@@ -15,7 +15,8 @@
       "@layouts/*": ["src/layouts/*"],
       "@data/*": ["src/data/*"],
       "@styles/*": ["src/styles/*"],
-      "@content/*": ["src/content/*"]
+      "@content/*": ["src/content/*"],
+      "@scripts/*": ["src/scripts/*"]
     }
   },
   "include": ["src/**/*", "*.d.ts", "astro.config.mjs"],

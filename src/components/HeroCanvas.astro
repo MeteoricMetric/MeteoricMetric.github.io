@@ -1,0 +1,82 @@
+---
+// merricstrough.com — Hero canvas wrapper.
+// Mounts one of the canvas presets from src/scripts/hero/ as a hydrated
+// island. The canvas reads the design-token accent color from
+// getComputedStyle and respects prefers-reduced-motion at mount time.
+import type { HeroCanvasPreset } from '@scripts/hero';
+
+interface Props {
+  preset: HeroCanvasPreset;
+  opacity?: number; // 0..1; layered mode uses ~0.4 to sit behind a foreground image
+  className?: string;
+}
+
+const { preset, opacity = 1, className } = Astro.props;
+---
+
+<canvas
+  class:list={['hero-canvas', className]}
+  data-preset={preset}
+  data-opacity={opacity.toString()}
+  aria-hidden="true"
+></canvas>
+
+<style>
+  .hero-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { mountHeroCanvas, readAccentColor, prefersReducedMotion } from '@scripts/hero';
+  import type { HeroCanvasController, HeroCanvasPreset } from '@scripts/hero';
+
+  // Mount every hero-canvas on the page (typically just the one in the hero).
+  const canvases = document.querySelectorAll<HTMLCanvasElement>('.hero-canvas');
+
+  const controllers = new WeakMap<HTMLCanvasElement, HeroCanvasController>();
+
+  const mount = (canvas: HTMLCanvasElement) => {
+    if (controllers.has(canvas)) return;
+    const preset = (canvas.dataset.preset ?? 'starfield') as HeroCanvasPreset;
+    const opacity = Number.parseFloat(canvas.dataset.opacity ?? '1');
+    const controller = mountHeroCanvas(preset, {
+      canvas,
+      accentColor: readAccentColor(canvas),
+      reducedMotion: prefersReducedMotion(),
+      opacity: Number.isFinite(opacity) ? opacity : 1,
+    });
+    controller.start();
+    controllers.set(canvas, controller);
+  };
+
+  const unmount = (canvas: HTMLCanvasElement) => {
+    const c = controllers.get(canvas);
+    if (c) {
+      c.destroy();
+      controllers.delete(canvas);
+    }
+  };
+
+  for (const canvas of canvases) mount(canvas);
+
+  // Resize handling — single shared listener.
+  const onResize = () => {
+    for (const canvas of document.querySelectorAll<HTMLCanvasElement>('.hero-canvas')) {
+      controllers.get(canvas)?.resize();
+    }
+  };
+  window.addEventListener('resize', onResize, { passive: true });
+
+  // View Transitions cleanup — destroy controllers before the page swaps.
+  document.addEventListener('astro:before-swap', () => {
+    for (const canvas of document.querySelectorAll<HTMLCanvasElement>('.hero-canvas')) {
+      unmount(canvas);
+    }
+    window.removeEventListener('resize', onResize);
+  }, { once: true });
+</script>

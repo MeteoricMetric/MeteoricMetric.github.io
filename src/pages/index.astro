@@ -1,24 +1,16 @@
 ---
-// merricstrough.com — v2 landing page placeholder.
-// Real implementation per ADR-0002 (Visual direction & design system v1)
-// arrives in Phase 1.
+// merricstrough.com — v2 landing page (Phase 0 shell).
+// Phase 1 will replace the body with the full hero composition per ADR-0002.
+import BaseLayout from '@layouts/BaseLayout.astro';
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Merric S. — building, gaming, making</title>
-    <meta
-      name="description"
-      content="Merric's corner of the internet — Minecraft, art, gaming, and what's next."
-    />
-  </head>
-  <body>
-    <main>
-      <h1>v2 in flight</h1>
-      <p>Astro 6 scaffold is up. Real landing page lands in Phase 1 per ADR-0002.</p>
-    </main>
-  </body>
-</html>
+<BaseLayout
+  title="Merric S. — building, gaming, making"
+  description="Merric's corner of the internet — Minecraft, art, gaming, and what's next."
+  includePersonSchema={true}
+>
+  <main id="main-content">
+    <h1>v2 in flight</h1>
+    <p class="eyebrow">Phase 1 lands the hero composition per ADR-0002.</p>
+  </main>
+</BaseLayout>

@@ -1,0 +1,48 @@
+---
+// merricstrough.com — font loader (per ADR-0002 §Typography).
+//
+// The `geist` npm package's JS entrypoints depend on `next/font/local`
+// and are unusable in Astro. We import the variable woff2 binaries
+// directly via Vite's `?url` query so the bundler resolves the asset
+// path, fingerprints the file, and emits it into the static build.
+//
+// Geist Sans + Geist Mono are self-hosted (privacy + perf). Newsreader
+// (serif) is delivered via Google Fonts in v1; self-hosting deferred
+// per ADR-0002 §Open items.
+import geistSansUrl from 'geist/dist/fonts/geist-sans/Geist-Variable.woff2?url';
+import geistMonoUrl from 'geist/dist/fonts/geist-mono/GeistMono-Variable.woff2?url';
+---
+
+{/* Preload the critical face only (Geist Sans variable) per ADR-0002 perf budget. */}
+<link rel="preload" as="font" type="font/woff2" href={geistSansUrl} crossorigin="anonymous" />
+
+{/* Newsreader — Google Fonts in v1; self-host deferred. */}
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap"
+/>
+
+{/*
+  Self-hosted Geist @font-face declarations. Emitted as a global style block
+  so the rules apply document-wide (Astro scopes <style> to the component
+  by default, which would defeat font registration).
+*/}
+<style is:global define:vars={{ geistSansUrl, geistMonoUrl }}>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(var(--geistSansUrl)) format('woff2-variations');
+  }
+
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(var(--geistMonoUrl)) format('woff2-variations');
+  }
+</style>

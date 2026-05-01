@@ -1,0 +1,79 @@
+---
+// merricstrough.com — universal page wrapper (per ADR-0001 + ADR-0002).
+// Owns the document shell: html lang/theme, <head> via BaseHead, skip-link,
+// View Transitions wiring, footer, optional Person JSON-LD.
+import { ClientRouter } from 'astro:transitions';
+import BaseHead from '@components/BaseHead.astro';
+import Footer from '@components/Footer.astro';
+import PersonSchema from '@components/PersonSchema.astro';
+
+// Tokens MUST load first; reset rebases the box model; base sets the
+// typographic baseline that every page depends on.
+import '@styles/tokens.css';
+import '@styles/reset.css';
+import '@styles/base.css';
+
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  ogImage?: string;
+  // Only the landing page passes true — Schema.org Person belongs on the
+  // entity's "main" URL per ADR-0003.
+  includePersonSchema?: boolean;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  ogImage,
+  includePersonSchema = false,
+} = Astro.props;
+
+// Forward optional props to BaseHead only when defined so
+// exactOptionalPropertyTypes doesn't reject `undefined` values.
+const headProps = {
+  title,
+  description,
+  ...(canonical !== undefined ? { canonical } : {}),
+  ...(ogImage !== undefined ? { ogImage } : {}),
+};
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark" style="color-scheme: dark;">
+  <head>
+    <BaseHead {...headProps} />
+    {includePersonSchema && <PersonSchema />}
+    <ClientRouter />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <slot />
+    <Footer />
+
+    <style>
+      /* Skip-link — visually hidden until focused, then anchored top-left. */
+      .skip-link {
+        position: absolute;
+        inset-block-start: var(--space-2);
+        inset-inline-start: var(--space-2);
+        padding: var(--space-2) var(--space-4);
+        background: var(--color-surface-2);
+        color: var(--color-text-primary);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-sm);
+        text-decoration: none;
+        transform: translateY(-200%);
+        transition: transform var(--duration-fast) var(--ease-out);
+        z-index: var(--z-toast);
+      }
+
+      .skip-link:focus-visible {
+        transform: translateY(0);
+      }
+    </style>
+  </body>
+</html>

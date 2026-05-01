@@ -1,0 +1,71 @@
+---
+// merricstrough.com — universal <head> component (per ADR-0003 + ADR-0002).
+// Owns: charset, viewport, title/description, canonical, Open Graph,
+// Twitter card, rel=me identity links, favicons, theme-color, fonts.
+import { verifiedAccounts } from '@data/accounts';
+import { parent } from '@data/family';
+import FontLoader from '@components/FontLoader.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  ogImage?: string;
+}
+
+const { title, description, canonical, ogImage } = Astro.props;
+
+// Strip query + hash from the current URL so canonical points at the
+// resource, not at a parameterized variant. Authors may pass `canonical`
+// explicitly to override (e.g. for RSS or alternate-domain landings).
+const currentUrl = new URL(Astro.url.toString());
+currentUrl.search = '';
+currentUrl.hash = '';
+const canonicalHref = canonical ?? currentUrl.toString();
+
+const ogImageHref = ogImage ?? '/og-default.png';
+const siteName = 'merricstrough.com';
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="generator" content={Astro.generator} />
+<meta name="theme-color" content="#1a1820" />
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalHref} />
+
+{/* Open Graph */}
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalHref} />
+<meta property="og:type" content="website" />
+<meta property="og:image" content={ogImageHref} />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:locale" content="en_US" />
+
+{/* Twitter card */}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageHref} />
+
+{/* IndieWeb identity — outgoing rel=me to parent + each verified account. */}
+<link rel="me" href={parent.url} />
+{verifiedAccounts.map((account) => <link rel="me" href={account.url} />)}
+
+{/*
+  TODO(phase-0-followup): generate the favicon set and place at /public/.
+  Files referenced below do not exist yet; links are wired so the manifest
+  is correct on day-one of the asset commit.
+*/}
+<link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+
+<FontLoader />

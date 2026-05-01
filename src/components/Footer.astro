@@ -1,0 +1,54 @@
+---
+// merricstrough.com — site footer (per ADR-0003 + CLAUDE.md §10.3).
+// Family attribution to shanestrough.com via rel=me + minimal owner credit.
+import { parent, merric } from '@data/family';
+
+const year = new Date().getFullYear();
+---
+
+<footer role="contentinfo" class="footer">
+  <div class="footer__inner">
+    <p class="footer__attribution">
+      Built with my dad &mdash;{' '}
+      <a href={parent.url} rel="me">shanestrough.com</a>
+    </p>
+    <p class="eyebrow footer__meta">
+      &copy; Merric Strough &mdash; {merric.alternateName} &mdash; {year}
+    </p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    margin-block-start: var(--space-section);
+    padding-block: var(--space-12) var(--space-8);
+    padding-inline: var(--space-6);
+    border-block-start: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+  }
+
+  .footer__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-inline-size: var(--width-content);
+    margin-inline: auto;
+  }
+
+  .footer__attribution {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  .footer__meta {
+    color: var(--color-text-subtle);
+  }
+
+  @media (min-width: 48rem) {
+    .footer__inner {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+  }
+</style>

@@ -1,0 +1,62 @@
+---
+// merricstrough.com — JSON-LD Person schema for the landing page.
+//
+// Conforms to ADR-0003 §JSON-LD spec and CLAUDE.md §10.3. Per Schema.org
+// best practice, this entity is emitted ONLY on the homepage so secondary
+// pages can describe their own primary subject without diluting the
+// Person signal. Privacy: per §10.5, sibling entries are name-only — no
+// per-site URLs until brothers have their own consenting presence.
+import { merric, parent, siblings } from '@data/family';
+import { verifiedAccounts } from '@data/accounts';
+
+type PersonRef = {
+  '@type': 'Person';
+  name: string;
+  url?: string;
+};
+
+type PersonSchema = {
+  '@context': 'https://schema.org';
+  '@type': 'Person';
+  name: string;
+  givenName: string;
+  familyName: string;
+  url: string;
+  image: string;
+  description: string;
+  alternateName: string;
+  sameAs: readonly string[];
+  parent: PersonRef;
+  sibling: readonly PersonRef[];
+};
+
+// Build the schema object server-side; we control every field per ADR-0003
+// rather than spreading the source `Person` records (which carry optional
+// fields we don't want to leak into structured data).
+const schema: PersonSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: merric.name,
+  givenName: merric.givenName ?? 'Merric',
+  familyName: merric.familyName ?? 'Strough',
+  url: merric.url ?? 'https://merricstrough.com',
+  image: 'https://merricstrough.com/avatar.jpg',
+  description:
+    '13-year-old builder, gamer, and creator. Working on Minecraft, art, and code.',
+  alternateName: merric.alternateName ?? 'MeteoricMetric',
+  sameAs: verifiedAccounts.map((account) => account.url),
+  parent: {
+    '@type': 'Person',
+    name: parent.name,
+    ...(parent.url !== undefined ? { url: parent.url } : {}),
+  },
+  sibling: siblings.map((sib): PersonRef => ({ '@type': 'Person', name: sib.name })),
+};
+---
+
+{/*
+  JSON-LD Person schema — landing page only. See ADR-0003 §JSON-LD spec
+  and CLAUDE.md §10.3. Validate via https://search.google.com/test/rich-results
+  after deploy.
+*/}
+<script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />

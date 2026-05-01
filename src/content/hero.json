@@ -1,0 +1,19 @@
+{
+  "backgroundMode": "layered",
+  "backgroundImage": "/avatar.jpg",
+  "canvasPreset": "starfield",
+  "headline": "Building, breaking, making.",
+  "subhead": "13. Worlds in Minecraft, marks in art, hours in games. This is where I show what I'm into right now.",
+  "ctas": [
+    {
+      "label": "Join the server",
+      "url": "https://merricstrough.com/minecraft",
+      "kind": "primary"
+    },
+    {
+      "label": "Watch live →",
+      "url": "https://www.twitch.tv/meteoricmetric",
+      "kind": "secondary"
+    }
+  ]
+}

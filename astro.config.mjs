@@ -1,17 +1,15 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
-import sitemap from '@astrojs/sitemap';
+
 import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
+import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 // Per ADR-0001 — Astro 6 + TypeScript, static output to GitHub Pages
 export default defineConfig({
   site: 'https://merricstrough.com',
 
-  integrations: [
-    sitemap(),
-    mdx(),
-  ],
+  integrations: [sitemap(), mdx()],
 
   // Astro 6 Sharp image service — AVIF + WebP + responsive srcset
   // wired automatically via the <Image /> component in src/.

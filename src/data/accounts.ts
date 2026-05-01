@@ -65,6 +65,4 @@ export const accounts: readonly Account[] = [
 ];
 
 // Convenience: filter once at module scope; consumers iterate this directly.
-export const verifiedAccounts: readonly Account[] = accounts.filter(
-  (a) => a.verified,
-);
+export const verifiedAccounts: readonly Account[] = accounts.filter((a) => a.verified);

@@ -30,9 +30,9 @@
  * picks up src/index.ts (per wrangler.toml `main`).
  */
 
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { randomBytes } from 'node:crypto';
 import { exec } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { platform } from 'node:os';
 
 const REDIRECT_URI = 'http://127.0.0.1:8888/callback';

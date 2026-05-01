@@ -8,16 +8,24 @@
   "files": {
     "ignoreUnknown": true,
     "includes": [
-      "src/**",
+      "src/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+      "tests/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+      "worker/src/**/*.{ts,tsx,js,jsx,mjs,cjs}",
+      "scripts/**/*.{ts,js,mjs,cjs}",
       "*.config.mjs",
       "*.config.js",
       "*.config.ts",
+      "src/**/*.json",
       "*.json",
-      "!.astro/**",
-      "!dist/**",
-      "!node_modules/**",
-      "!playwright-report/**",
-      "!test-results/**"
+      "!*.lock.json",
+      "!package-lock.json",
+      "!.astro",
+      "!dist",
+      "!node_modules",
+      "!playwright-report",
+      "!test-results",
+      "!worker/node_modules",
+      "!worker/.wrangler"
     ]
   },
   "formatter": {
@@ -56,5 +64,20 @@
     "formatter": {
       "trailingCommas": "none"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["worker/src/auth-helper.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    }
+  ]
 }

@@ -31,7 +31,6 @@ export function readAccentColor(el: HTMLElement): string {
 /** Read the user's reduced-motion preference at call time. */
 export function prefersReducedMotion(): boolean {
   return (
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
 }

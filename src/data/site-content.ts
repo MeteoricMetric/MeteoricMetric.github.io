@@ -7,11 +7,10 @@
 // keeps the same level of type safety + schema enforcement that a content
 // collection would give us.
 
-import { z } from 'astro/zod';
-
 import heroRaw from '@content/hero.json';
 import identityRaw from '@content/identity.json';
 import nowSpinningRaw from '@content/now-spinning.json';
+import { z } from 'astro/zod';
 
 // ── Hero ─────────────────────────────────────────────────────────────────
 

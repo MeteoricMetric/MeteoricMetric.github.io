@@ -14,26 +14,27 @@ import { expect, test } from '@playwright/test';
 const PAGE_LOAD_BUDGET_MS = 3_000;
 const DIST_SIZE_BUDGET_BYTES = 25 * 1024 * 1024; // 25 MB — generous smoke budget
 
-test.describe.parallel('perf smoke', () => {
-  test(`landing page loads under ${PAGE_LOAD_BUDGET_MS}ms (loadEventEnd - navigationStart)`, async ({
-    page,
-  }) => {
-    await page.goto('/');
-    await page.waitForLoadState('load');
-    const elapsed = await page.evaluate(() => {
-      const nav = performance.getEntriesByType('navigation')[0] as
-        | PerformanceNavigationTiming
-        | undefined;
-      if (nav) return nav.loadEventEnd - nav.startTime;
-      // Legacy fallback for environments without Navigation Timing L2.
-      const t = performance.timing;
-      return t.loadEventEnd - t.navigationStart;
+test.describe
+  .parallel('perf smoke', () => {
+    test(`landing page loads under ${PAGE_LOAD_BUDGET_MS}ms (loadEventEnd - navigationStart)`, async ({
+      page,
+    }) => {
+      await page.goto('/');
+      await page.waitForLoadState('load');
+      const elapsed = await page.evaluate(() => {
+        const nav = performance.getEntriesByType('navigation')[0] as
+          | PerformanceNavigationTiming
+          | undefined;
+        if (nav) return nav.loadEventEnd - nav.startTime;
+        // Legacy fallback for environments without Navigation Timing L2.
+        const t = performance.timing;
+        return t.loadEventEnd - t.navigationStart;
+      });
+      expect(elapsed, `loadEventEnd - navigationStart was ${elapsed}ms`).toBeLessThan(
+        PAGE_LOAD_BUDGET_MS,
+      );
     });
-    expect(elapsed, `loadEventEnd - navigationStart was ${elapsed}ms`).toBeLessThan(
-      PAGE_LOAD_BUDGET_MS,
-    );
   });
-});
 
 test.describe('perf smoke — build artifact', () => {
   test.skip(!process.env.CI, 'dist/ size is checked only in CI');

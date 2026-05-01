@@ -26,7 +26,4 @@ export const parent: Person = {
   url: 'https://shanestrough.com',
 };
 
-export const siblings: readonly Person[] = [
-  { name: 'Tristan Strough' },
-  { name: 'Layne Strough' },
-];
+export const siblings: readonly Person[] = [{ name: 'Tristan Strough' }, { name: 'Layne Strough' }];

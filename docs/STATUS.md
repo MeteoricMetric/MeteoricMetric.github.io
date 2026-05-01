@@ -1,7 +1,7 @@
 # Session resume — merricstrough.com v2
 
 > **Living doc.** Update on the way out of every session so the next session (Claude or human) can pick up cold without context loss.
-> Last updated: 2026-05-01 by Claude (Shane operating, post-power-cycle, late session)
+> Last updated: 2026-05-01 by Claude (Shane operating, end of late session — 38 commits, v2 fully live, all Dependabot resolved, 4 hero canvas presets shipped)
 
 ---
 

@@ -1,7 +1,7 @@
 # Session resume — merricstrough.com v2
 
 > **Living doc.** Update on the way out of every session so the next session (Claude or human) can pick up cold without context loss.
-> Last updated: 2026-05-01 by Claude (Shane operating, end of late session — 38 commits, v2 fully live, all Dependabot resolved, 4 hero canvas presets shipped)
+> Last updated: 2026-05-01 by Claude (Shane operating; light mode + hero CMS image pipeline + co-attribution + Pages source flip all landed; 45+ commits on origin/main)
 
 ---
 
@@ -15,9 +15,7 @@
 - ✅ Deploy to GitHub Pages (publishes dist/ via deploy-pages@v5)
 - 🟡 Lighthouse (PR-only — runs on Dependabot PRs and feature PRs; main itself doesn't trigger it. Last verified-passing run: ratings ≥ 0.95 on all four categories after the a11y/perf fix wave.)
 
-⚠️ The legacy `pages build and deployment` workflow keeps failing on every push — see "Pages source still on legacy" below for the one-click fix.
-
-### What landed this session (post-power-cycle)
+### What landed this session (post-power-cycle through current)
 - All Action major versions bumped (checkout v6, setup-node v6, codeql v4, configure-pages v6, upload-pages-artifact v5, deploy-pages v5) in a single direct commit. TS 6 deferred via @dependabot ignore-major.
 - `npm run typecheck` + CI typecheck step simplified (dropped redundant `tsc --noEmit` that broke on `astro:content` virtual modules).
 - A11y wave: bumped `--color-text-muted` / `--color-text-subtle` lightness, added `--color-accent-text` (oklch 82%) for accent-as-TEXT consumers, default underline on `<a>`. Closes Lighthouse color-contrast + link-in-text-block.
@@ -25,34 +23,42 @@
 - New `/now` IndieWeb page (https://nownownow.com convention) — Pages-CMS-managed via `.pages.yml`.
 - Lighthouse over-strict insights (`network-dependency-tree-insight`, `render-blocking-insight`, `uses-long-cache-ttl`, `csp-xss`) softened to `warn` — the four category gates remain at error/0.95.
 - v1 holdovers (`index.html`, `avatar.jpg` at repo root) deleted; v2 versions live under `public/`.
+- 4 hero canvas presets shipped (starfield, wireframe-planet, particle-drift, meridian-grid) — Pages-CMS-selectable.
+- Co-attribution Co-Authored-By trailer adopted on every commit going forward (Shane + Merric + Claude). Documented in CLAUDE.md §7.5 + memory.
+- Shane completed the GitHub UI manual config: Pages source → GitHub Actions, HTTPS enforced, Dependabot alerts ON, private vulnerability reporting ON. Legacy `pages build and deployment` workflow no longer triggers.
+- shanestrough.com inverse cross-link kit drafted at `docs/SHANESTROUGH-INVERSE.md` — copy-paste ready for the separate session in your other repo.
+- Light mode shipped via `prefers-color-scheme: light` overrides on `:root:not([data-theme='dark'])`. System preference decides; future manual toggle hooks in place. theme-color meta tags flip per system pref. HeroBackground.astro veil + image filter flip too.
+- experimental.csp attempted — Astro 6.2.1 doesn't recognize the flag yet; reverted. Manual <meta> CSP with 'unsafe-inline' for inline scripts/styles stays. Revisit when the flag stabilizes.
+- Hero CMS image pipeline: `optimize-images.mjs` extended to scan `public/hero/` automatically + skip files with up-to-date AVIF/WebP siblings. Wired as `prebuild` in package.json so `npm run build` (and CI deploy) auto-runs it. Future Pages CMS hero uploads get modern formats with no manual step.
 
-Build: `npm run build` produces 6 pages in ~2s (`/`, `/404`, `/minecraft`, `/art`, `/youtube`, `/twitch`) plus `sitemap-index.xml` + `sitemap-0.xml`.
+Build: `npm run build` produces 7 pages (`/`, `/404`, `/art`, `/minecraft`, `/now`, `/twitch`, `/youtube`) + `sitemap-index.xml` + `sitemap-0.xml`. Prebuild image-optimization runs first.
 Lint: `npm run lint` — 0 errors, 0 warnings.
 Typecheck: `npm run check` — 0 errors, 0 warnings, 11 deprecation hints (non-blocking, from `astro:content`'s zod re-export).
 Page weight on landing: ~180KB first paint (well under the 500KB budget per CLAUDE.md §11.1).
+Live: https://merricstrough.com/ verified at last deploy timestamp.
 
 ADRs accepted and committed: `docs/decisions/0001-adopt-astro-typescript-stack.md`, `0002-visual-direction-and-design-system-v1.md`, `0003-cross-site-family-graph-implementation.md`.
 
 ---
 
-## Pages source still on legacy — Shane UI flip (~30 seconds)
+## Shane UI tasks — DONE this session
+- ✅ Settings → Pages → Source: GitHub Actions (legacy Jekyll workflow stopped)
+- ✅ Enforce HTTPS toggle ON (`https_enforced: true` per Pages API)
+- ✅ Dependabot alerts + security updates ON
+- ✅ Private vulnerability reporting ON
 
-GitHub Pages still has source = "branch: main, path: /" (the v1 default). The Actions deploy workflow publishes correctly anyway because `deploy-pages@v4` overrides the source via the artifact API. But the LEGACY `pages build and deployment` workflow auto-runs on every push, tries to Jekyll-parse the `.astro` files, fails noisily, and clutters the Actions tab with red badges.
+## Shane UI tasks — STILL OPEN
 
-**One-click fix:** Settings → Pages → "Build and deployment" → Source: **GitHub Actions** (not "Deploy from a branch"). Save. Done. Legacy workflow stops, Actions deploy is now the canonical publisher.
+- [ ] **Branch protection on `main`** (per CLAUDE.md §5.2 "when project matures"). Requires repo-admin access — `shane-thomas-strough` has push but not admin, so this needs to be done either by signing in as MeteoricMetric (admin owner) OR by promoting `shane-thomas-strough` to admin. Then: Settings → Branches → Add rule for `main`: require PR before merging, require status checks `Lint, type-check, build` + `Analyze (javascript-typescript)` + `Lighthouse audit` to pass, require branches up to date. I tried via `gh api -X PUT repos/.../branches/main/protection` and got 404 — collaborator scope can't see branch-protection endpoints.
 
-While in Settings → Pages, also flip:
-- **"Enforce HTTPS"** to ON. Currently `https_enforced: false` per the Pages API; cert is approved through 2026-07-18 so HTTPS works, just not enforced.
-
-I tried to do these via the GitHub API (`gh api -X PUT repos/.../pages -f build_type=workflow`) but got 404 — my OAuth token doesn't have the Pages-admin scope. UI is the simplest path.
-
----
-
-## Other Shane UI tasks (~5 min total)
-
-3. **Dependabot alerts + security updates ON.** Settings → Code security → both toggles ON.
-4. **Private vulnerability reporting ON.** Settings → Code security → enable. (`.well-known/security.txt` contact URL routes here.)
-5. **Branch protection on `main`** (per CLAUDE.md §5.2 "when project matures"). Settings → Branches → Add rule for `main`: require PR before merging, require status checks `verify` (CI) + `analyze (javascript-typescript)` (CodeQL) + `audit` (Lighthouse), require branches up to date.
+## Co-attribution: now active on every commit
+Per CLAUDE.md §7.5, every commit going forward ends with this trailer block (Shane chose Option B 2026-05-01):
+```
+Co-Authored-By: Merric Strough <277578502+MeteoricMetric@users.noreply.github.com>
+Co-Authored-By: Shane Strough <196983413+shane-thomas-strough@users.noreply.github.com>
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+```
+Pre-2026-05-01 commits NOT backfilled (would require force-push, rewrites history shared with the live deploy). Future Merric will see attribution from this point forward, which is reality anyway — the v2 buildout was solo Claude+Shane work before Merric saw the result.
 
 ---
 
@@ -162,6 +168,10 @@ Items marked ✓ landed during this session.
 - [ ] **Light mode tokens** per ADR-0002 §Open items. Add `prefers-color-scheme: light` overrides to `tokens.css`, expand `data-theme` toggle.
 - [ ] **Visual regression baselines** — Playwright `tests/visual.spec.ts` currently saves screenshots but doesn't pixel-match. Lock in baselines once the design is confirmed; turn on `expect(page).toHaveScreenshot()` assertions.
 - ✓ **Hero canvas third + fourth presets** — `particle-drift` (atmospheric dust on randomized vectors with accent halos) + `meridian-grid` (Tron-style perspective horizon with scrolling lines + accent pulse) shipped. All 4 presets selectable via the Pages CMS canvasPreset dropdown.
+- ✓ **Light mode tokens** — full `prefers-color-scheme: light` overrides on `:root:not([data-theme='dark'])` so system preference decides. theme-color meta flips per mode. HeroBackground veil + image-filter flip too. Future manual toggle hooks in place via the data-theme attribute. (ADR-0002 said "v1.5"; landed early because the system was solid.)
+- ✓ **Hero CMS image pipeline** — `optimize-images.mjs` scans `public/hero/` + skips already-fresh siblings. Wired as `prebuild` in package.json so every CI deploy auto-generates AVIF/WebP for any newly-uploaded hero image. Pages CMS uploads "just work" without a manual step.
+- 🟡 **experimental.csp** — attempted; Astro 6.2.1 doesn't recognize the flag (rejected with "Invalid or outdated experimental feature"). Either it landed in a later 6.x minor or has a different name. Manual <meta> CSP with `'unsafe-inline'` stays in place. Revisit when Astro stabilizes the feature OR a newer 6.x ships it.
+- [ ] **Manual theme-toggle UI button** + localStorage persistence — the data-theme attribute hooks are in place; just need a small component + inline script that reads localStorage on first paint to avoid theme-flicker.
 - [ ] **Spotify Now Playing — `manual` mode visual polish** — currently shows "Pinned track on Spotify →" with no track metadata. Could parse the Spotify URL → fetch oembed at build time → render real title/artist for pinned tracks.
 - [ ] **Hero CMS image AVIF/WebP pipeline** — when Merric uploads a custom hero image via Pages CMS, run a postcommit GitHub Action to generate `.avif` + `.webp` siblings. HeroBackground.astro already handles this gracefully if the variants exist; just needs the workflow.
 - [ ] **Quarterly link-rot check** for the family graph (CLAUDE.md §10.6 step 4) — schedule a recurring `/loop` agent or GitHub Action.

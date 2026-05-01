@@ -331,6 +331,16 @@ Conventional Commits format, lightly enforced:
 
 Body of the commit (if needed) explains *why* in 1-3 sentences.
 
+**Co-attribution trailer.** Every commit ends with a `Co-Authored-By` trailer block listing the real contributors so the GitHub Insights → Contributors graph reflects the collaboration. Local `git config user.name` stays as `MeteoricMetric` (so the commit author is Merric — this is his site), but the trailer surfaces Shane and Claude. Use this exact block at the bottom of every commit body:
+
+```
+Co-Authored-By: Merric Strough <277578502+MeteoricMetric@users.noreply.github.com>
+Co-Authored-By: Shane Strough <196983413+shane-thomas-strough@users.noreply.github.com>
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+```
+
+The emails are GitHub's noreply addresses — they expose nothing private and make the avatars render. If a commit is genuinely solo (e.g. a Pages-CMS edit by Merric himself with no Shane/Claude involvement), drop the relevant trailers. Default for AI-collaborated commits = all three.
+
 ---
 
 ## 8. Design system

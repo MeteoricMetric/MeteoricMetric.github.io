@@ -36,7 +36,9 @@ const siteName = 'merricstrough.com';
   Content Security Policy via meta http-equiv. GitHub Pages can't set
   HTTP headers, so meta is our only delivery vehicle. 'unsafe-inline'
   is required because Astro 6 ships scoped <style> + view-transition
-  scripts inline; tighten via experimental.csp + nonces in Phase 2.
+  scripts inline; tighten via experimental.csp + nonces in Phase 2
+  (the experimental.csp config flag is not yet recognized in Astro
+  6.2.1; revisit when it lands stable).
   frame-ancestors / report-to / sandbox don't work in meta and are
   intentionally omitted.
 */}

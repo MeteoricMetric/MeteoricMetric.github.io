@@ -1,0 +1,24 @@
+{
+  "name": "merricstrough-now-playing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker that powers the Spotify Now Playing widget on merricstrough.com (per ADR-0001 stack table; ADR-0002 hero meta-plane).",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "auth": "tsx src/auth-helper.ts",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260415.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.6.0",
+    "wrangler": "^4.20.0"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}

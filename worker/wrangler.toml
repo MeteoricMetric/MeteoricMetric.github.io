@@ -1,0 +1,48 @@
+# merricstrough-now-playing — Cloudflare Worker
+#
+# Per ADR-0001 stack table: this Worker is the first piece of infra beyond
+# GitHub Pages. It serves /api/now-playing for the "Now Spinning" widget on
+# the hero meta plane (ADR-0002).
+#
+# Secrets are NEVER stored here — they are set via:
+#   wrangler secret put SPOTIFY_CLIENT_ID
+#   wrangler secret put SPOTIFY_CLIENT_SECRET
+#   wrangler secret put SPOTIFY_REFRESH_TOKEN
+#
+# (See README.md for the one-time OAuth procedure that produces the refresh token.)
+#
+# NOTE on config format: as of this Worker's creation, both wrangler.toml and
+# wrangler.jsonc are first-class supported by Wrangler 4.x. We default to TOML
+# for diff legibility; flip to .jsonc later if Cloudflare deprecates TOML.
+
+name = "merricstrough-now-playing"
+main = "src/index.ts"
+
+# Pin a recent compatibility date close to creation date. Bump deliberately,
+# review the changelog: https://developers.cloudflare.com/workers/configuration/compatibility-dates/
+compatibility_date = "2026-04-01"
+
+# nodejs_compat is intentionally NOT enabled — this Worker uses only Web
+# Platform APIs (fetch, btoa, caches, Response, Headers). No Node built-ins.
+# compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare's built-in observability (logs + analytics in dashboard).
+# Pairs with `wrangler tail` for live debugging.
+[observability]
+enabled = true
+
+# Workers.dev subdomain is enabled by default during initial deploy:
+#   https://merricstrough-now-playing.<account>.workers.dev/api/now-playing
+#
+# Custom route — uncomment + edit when binding to a real subdomain
+# (e.g. api.merricstrough.com). Requires the zone to live on this Cloudflare
+# account, which currently it does not (DNS is on Porkbun → GitHub Pages per
+# CLAUDE.local.md §1). Two options when we want a custom hostname:
+#   1. Move DNS to Cloudflare and use [[routes]] below.
+#   2. Keep workers.dev URL and reference it directly from the Astro site.
+# Option 2 is the v1 plan — re-evaluate at v1.5.
+#
+# [[routes]]
+# pattern = "api.merricstrough.com/api/now-playing"
+# zone_name = "merricstrough.com"
+# custom_domain = true

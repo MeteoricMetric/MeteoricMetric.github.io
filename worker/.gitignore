@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Wrangler local state + build artifacts
+.wrangler/
+dist/
+build/
+
+# Local secrets — NEVER commit (CLAUDE.md §5.2)
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*

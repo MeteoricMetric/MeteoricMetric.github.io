@@ -69,6 +69,27 @@ export const accounts: readonly Account[] = [
     verified: true,
     showInFollow: true,
   },
+  {
+    // TikTok — handle `merric.strough` is full first.last name with a dot.
+    // Worse exposure than Steam in one way: every TikTok video URL Merric
+    // ever posts (e.g. tiktok.com/@merric.strough/video/12345…) carries
+    // his full name into every share, embed, and algorithm push.
+    //
+    // EXPLICIT §5.3 OVERRIDE: Shane exercised §13.4 again on 2026-05-01
+    // after being shown the TikTok-specific exposure pattern. Same
+    // disposition as Steam — keep the handle, document the override,
+    // future sessions don't re-litigate.
+    //
+    // Original URL Shane provided had tracking params
+    // (?is_from_webapp=1&sender_device=pc and ?lang=en). Stripped to the
+    // canonical handle URL — query-string params don't change the resource
+    // and would confuse rel=me / sameAs validators.
+    platform: 'TikTok',
+    url: 'https://www.tiktok.com/@merric.strough',
+    handle: 'merric.strough',
+    verified: true,
+    showInFollow: true,
+  },
 
   // ── Pending — see notes ──────────────────────────────────────────────────
 

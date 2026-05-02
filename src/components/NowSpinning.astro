@@ -14,10 +14,19 @@ import { nowSpinning } from '@data/site-content';
 
 const { mode, manualTrackUrl: manualUrl } = nowSpinning;
 
-// Worker URL placeholder — populate after deploying the worker (task #10).
-// Keeping in this component for v1; will graduate to src/data/spotify-config.ts
-// once a second consumer needs it.
-const SPOTIFY_WORKER_URL: string | undefined = undefined;
+// Cloudflare Worker that proxies Spotify Web API and adds edge-cached
+// access tokens + CORS for this origin. Deployed 2026-05-02 against
+// Merric's Spotify account. Free Cloudflare Workers tier covers the
+// traffic forever for our usage.
+//
+// Setup runbook + secrets management: worker/README.md
+// Operational details (Spotify Client ID, account ownership): CLAUDE.local.md §6
+//
+// Will graduate to src/data/spotify-config.ts when a second consumer
+// needs it (Phase 4 / when sibling family-domain sites also surface
+// a now-playing widget).
+const SPOTIFY_WORKER_URL: string | undefined =
+  'https://merricstrough-now-playing.meteoricmetric.workers.dev/api/now-playing';
 
 const shouldRender =
   mode === 'live' ? Boolean(SPOTIFY_WORKER_URL) :

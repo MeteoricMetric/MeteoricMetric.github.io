@@ -41,15 +41,12 @@ ADRs accepted and committed: `docs/decisions/0001-adopt-astro-typescript-stack.m
 
 ---
 
-## Shane UI tasks — DONE this session
+## Shane UI tasks — ALL DONE
 - ✅ Settings → Pages → Source: GitHub Actions (legacy Jekyll workflow stopped)
 - ✅ Enforce HTTPS toggle ON (`https_enforced: true` per Pages API)
 - ✅ Dependabot alerts + security updates ON
 - ✅ Private vulnerability reporting ON
-
-## Shane UI tasks — STILL OPEN
-
-- [ ] **Branch protection on `main`** (per CLAUDE.md §5.2 "when project matures"). Requires repo-admin access — `shane-thomas-strough` has push but not admin, so this needs to be done either by signing in as MeteoricMetric (admin owner) OR by promoting `shane-thomas-strough` to admin. Then: Settings → Branches → Add rule for `main`: require PR before merging, require status checks `Lint, type-check, build` + `Analyze (javascript-typescript)` + `Lighthouse audit` to pass, require branches up to date. I tried via `gh api -X PUT repos/.../branches/main/protection` and got 404 — collaborator scope can't see branch-protection endpoints.
+- ✅ Branch protection ruleset uploaded — "Protect main (light)" (ruleset_id 15849870), enforcement: active. Blocks force-push + deletion, allows direct push for current iteration speed. Strict ruleset in `docs/rulesets/main-strict.json` ready for upload when project matures further (per CLAUDE.md §5.2).
 
 ## Co-attribution: now active on every commit
 Per CLAUDE.md §7.5, every commit going forward ends with this trailer block (Shane chose Option B 2026-05-01):
@@ -79,18 +76,17 @@ When verified URLs land:
 
 ---
 
-## Spotify Now Playing — deploy the Worker (~30 min, needs Cloudflare + Spotify accounts)
+## Spotify Now Playing — DEPLOYED + LIVE (2026-05-02)
 
-Code is fully written in `worker/` and ready to deploy. Steps (full runbook in `worker/README.md`):
+Worker live at **https://merricstrough-now-playing.meteoricmetric.workers.dev/api/now-playing**. Workers.dev subdomain `meteoricmetric.workers.dev` chosen to match the brand handle.
 
-1. **Create Cloudflare account** at dash.cloudflare.com if Shane doesn't have one. Free tier covers Workers forever for our usage. Enable TOTP 2FA per CLAUDE.md §5.2.
-2. **Create Spotify Developer App** at https://developer.spotify.com/dashboard logged in as Merric. Name: "merricstrough.com Now Playing". Required scopes: `user-read-currently-playing user-read-playback-state`. Redirect URI: **`http://127.0.0.1:8888/callback`** (Spotify deprecated `http://localhost`). Save the Client ID + Client Secret.
-3. **One-time OAuth capture.** From `worker/`: `npx tsx src/auth-helper.ts` (after `npm install` in `worker/`). Browser opens, log in with Merric's Spotify, capture the refresh_token printed to the console.
-4. **Wrangler login + secrets.** From `worker/`: `npx wrangler login`, then `npx wrangler secret put SPOTIFY_CLIENT_ID`, `npx wrangler secret put SPOTIFY_CLIENT_SECRET`, `npx wrangler secret put SPOTIFY_REFRESH_TOKEN` (paste each when prompted).
-5. **Deploy.** `npx wrangler deploy`. Worker URL prints — looks like `https://merricstrough-now-playing.<account>.workers.dev`.
-6. **Wire it in.** Edit `src/components/NowSpinning.astro` line ~22: change `const SPOTIFY_WORKER_URL: string | undefined = undefined;` to `const SPOTIFY_WORKER_URL = 'https://merricstrough-now-playing.<account>.workers.dev/api/now-playing';`. Then edit `src/content/now-spinning.json` and flip `"mode": "off"` to `"mode": "live"`. Commit + push. Live in ~1-2 min.
+- **Frontend:** `src/components/NowSpinning.astro` polls the Worker every 30s, renders track title + artist + cover-art-tinted pill in the hero meta plane. Skeleton state while loading. Silent degradation on any fetch error.
+- **Mode:** `src/content/now-spinning.json` set to `"live"` — Pages CMS can flip to `"manual"` (pinned track) or `"off"` if Merric ever wants to override.
+- **Backend:** Cloudflare Worker (`worker/` subdir) refreshes Spotify access tokens via the refresh-token grant, edge-caches the access token for ~50min, returns the currently-playing track JSON with `Cache-Control: public, max-age=30, s-maxage=60` + CORS for merricstrough.com.
+- **Operational details** (Spotify Client ID, account ownership, secret rotation procedure): `CLAUDE.local.md` §6 (gitignored).
+- **Live observability:** `cd worker && npm run tail` for streaming logs.
 
-After this lands, the hero meta plane shows what Merric is actually listening to (auto-updates every 30s). Update `CLAUDE.local.md` §6 with the actual Worker URL once deployed.
+When Merric plays something on Spotify, the widget picks it up within ~30s and shows it on the landing page hero. When he stops, it shows "Not playing right now" then disappears or shows a pinned track depending on mode.
 
 ---
 

@@ -127,8 +127,23 @@ const SPOTIFY_NOW_PLAYING_URL =
 /** Spotify access tokens last 3600s; cache for 3000s to leave a safety margin. */
 const ACCESS_TOKEN_TTL_SECONDS = 3000;
 
-/** Synthetic URL used as the Cache API key for the cached access token. */
-const ACCESS_TOKEN_CACHE_KEY = 'https://internal.merricstrough.com/spotify-access-token';
+/**
+ * Synthetic URL used as the Cache API key for the cached access token.
+ *
+ * Versioned suffix: bump the trailing `-vN` whenever the refresh token is
+ * rotated AND the previous access token (cached at the edge for ~50min)
+ * needs to be invalidated immediately. Without bumping, edge nodes keep
+ * serving the stale access token until ACCESS_TOKEN_TTL_SECONDS elapses,
+ * which means a scope-corrected new refresh token doesn't take effect for
+ * up to 50 minutes after `wrangler secret put`.
+ *
+ * History:
+ *   v1 — initial deploy 2026-05-02
+ *   v2 — bumped 2026-05-02 after diagnosing 403s from missing scopes;
+ *        re-issued refresh token with explicit consent had the right
+ *        scopes but cached v1 access token was scope-incomplete.
+ */
+const ACCESS_TOKEN_CACHE_KEY = 'https://internal.merricstrough.com/spotify-access-token-v2';
 
 /** Allowed origins for CORS — strict allowlist, no wildcards. */
 const ALLOWED_ORIGINS = new Set<string>([
@@ -197,8 +212,21 @@ async function getNowPlaying(env: Env): Promise<NowPlayingResponse> {
 
   if (response.status === 401) {
     // Token rejected. Bust the cached token so the next request re-refreshes.
-    console.warn('spotify 401 on currently-playing — clearing cached token');
+    const body = await safeReadErrorBody(response);
+    console.warn('spotify 401 on currently-playing — clearing cached token', body);
     await invalidateAccessToken();
+    return SAFE_FALLBACK;
+  }
+
+  if (response.status === 403) {
+    // 403 on this endpoint almost always means the OAuth grant lacks the
+    // user-read-currently-playing scope (or the app isn't authorized for
+    // this user in dev mode). Re-run auth-helper.ts and re-issue the
+    // refresh token via `wrangler secret put SPOTIFY_REFRESH_TOKEN`, then
+    // bump ACCESS_TOKEN_CACHE_KEY's `-vN` suffix to force fresh access
+    // token issuance at the edge. Body usually contains a useful message.
+    const body = await safeReadErrorBody(response);
+    console.warn('spotify 403 on currently-playing (likely scope issue)', body);
     return SAFE_FALLBACK;
   }
 
@@ -209,7 +237,8 @@ async function getNowPlaying(env: Env): Promise<NowPlayingResponse> {
   }
 
   if (!response.ok) {
-    console.warn(`spotify currently-playing returned ${response.status}`);
+    const body = await safeReadErrorBody(response);
+    console.warn(`spotify currently-playing returned ${response.status}`, body);
     return SAFE_FALLBACK;
   }
 
@@ -261,6 +290,20 @@ function normalizeNowPlaying(data: SpotifyCurrentlyPlayingResponse): NowPlayingR
 
   // Ads or unknown — treat as not playing for widget purposes.
   return SAFE_FALLBACK;
+}
+
+/**
+ * Best-effort read of an error response body for log diagnostics.
+ * Spotify error bodies are small JSON like {"error":{"status":403,"message":"..."}}.
+ * Caps at 512 chars so a misbehaving upstream can't blow up logs.
+ */
+async function safeReadErrorBody(response: Response): Promise<string> {
+  try {
+    const text = await response.text();
+    return text.length > 512 ? `${text.slice(0, 512)}…` : text;
+  } catch {
+    return '<body unreadable>';
+  }
 }
 
 /** Pick the largest image whose width is <= 640 (good for hero meta widget). */

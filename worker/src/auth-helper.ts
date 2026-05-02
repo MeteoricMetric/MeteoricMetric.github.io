@@ -119,6 +119,20 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
     console.log('');
     console.log('SUCCESS — refresh token captured.');
     console.log('');
+    console.log(`Granted scopes: ${tokenRes.scope || '<none>'}`);
+    console.log('');
+    if (!tokenRes.scope?.includes('user-read-currently-playing')) {
+      console.warn('WARNING: granted scopes do NOT include user-read-currently-playing.');
+      console.warn('The Worker will return 403 on /api/now-playing. Possible causes:');
+      console.warn('  (a) The Spotify Developer App is in Development Mode and the');
+      console.warn('      logged-in user is not in its "User Management" allowlist.');
+      console.warn('      Fix: Spotify Dev Dashboard -> app -> User Management -> add the');
+      console.warn(`      user${"'"}s Spotify email + display name.`);
+      console.warn('  (b) The user clicked through the consent screen without granting');
+      console.warn('      all requested scopes. Re-run with show_dialog=true (already on).');
+      console.warn('  (c) The Spotify app definition no longer matches what we requested.');
+      console.warn('');
+    }
     console.log('---------- COPY BELOW ----------');
     console.log(tokenRes.refresh_token);
     console.log('---------- COPY ABOVE ----------');

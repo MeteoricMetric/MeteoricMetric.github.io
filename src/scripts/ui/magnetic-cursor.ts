@@ -96,3 +96,7 @@ if (document.readyState === 'loading') {
 // need fresh attachment; the previous run's `elements` list referenced the
 // old DOM nodes which were swapped out).
 document.addEventListener('astro:page-load', init);
+
+// Force module scope — without imports/exports this file is a script and its
+// top-level `init` / `readNumberAttr` collide with the same names in card-tilt.ts.
+export {};

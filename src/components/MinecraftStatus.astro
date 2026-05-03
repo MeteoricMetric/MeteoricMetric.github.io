@@ -1,0 +1,289 @@
+---
+// merricstrough.com — Live Minecraft server status widget for /minecraft.
+//
+// Source of truth: Worker /api/minecraft-status (proxies api.mcstatus.io v2).
+//
+// Behavior:
+//   - Server-rendered as a "checking…" skeleton; client hydrates on page load.
+//   - Two visible states: ONLINE (player count + MOTD + version + favicon)
+//     vs OFFLINE (compact "currently offline" card with last-checked time).
+//   - Polls every 60s while the page is open. Cleanup on astro:before-swap.
+//
+// Accessibility: aria-live="polite", semantic statuses, no animation that
+// can't be disabled by prefers-reduced-motion.
+
+import { WORKER_ENDPOINTS } from '@data/worker-config';
+---
+
+<section
+  class="mc-status"
+  data-state="loading"
+  data-endpoint={WORKER_ENDPOINTS.minecraftStatus}
+  aria-live="polite"
+  aria-label="Minecraft server status"
+>
+  <header class="mc-status__header">
+    <span class="eyebrow">MeteoricCraft server</span>
+    <h2 class="mc-status__heading">Server status</h2>
+  </header>
+
+  <div class="mc-status__card">
+    <div class="mc-status__indicator" aria-hidden="true">
+      <span class="mc-status__dot"></span>
+    </div>
+
+    <div class="mc-status__body">
+      <p class="mc-status__state">Checking…</p>
+      <dl class="mc-status__meta">
+        <div class="mc-status__meta-row" data-field="players" hidden>
+          <dt>Players</dt>
+          <dd class="mc-status__players">—</dd>
+        </div>
+        <div class="mc-status__meta-row" data-field="version" hidden>
+          <dt>Version</dt>
+          <dd class="mc-status__version">—</dd>
+        </div>
+        <div class="mc-status__meta-row" data-field="motd" hidden>
+          <dt>MOTD</dt>
+          <dd class="mc-status__motd">—</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="mc-status__icon" hidden>
+      <img class="mc-status__favicon" alt="" />
+    </div>
+  </div>
+
+  <p class="mc-status__last-checked">
+    <span class="eyebrow">Last checked</span>
+    <time class="mc-status__time" datetime="">—</time>
+  </p>
+</section>
+
+<style>
+  .mc-status {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    max-inline-size: 40rem;
+    margin-inline: auto;
+  }
+
+  .mc-status__header {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .mc-status__heading {
+    font-size: var(--font-size-xl);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-primary);
+  }
+
+  .mc-status__card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-4);
+    align-items: start;
+    padding: var(--space-4);
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+  }
+
+  .mc-status__indicator {
+    padding-block-start: 0.35rem;
+  }
+
+  .mc-status__dot {
+    display: block;
+    inline-size: 0.875rem;
+    block-size: 0.875rem;
+    border-radius: 50%;
+    background: var(--color-text-subtle); /* loading state */
+    transition: background var(--duration-fast) var(--ease-out);
+  }
+
+  /* Online: green w/ subtle pulse. Pulse halts under prefers-reduced-motion. */
+  .mc-status[data-state='online'] .mc-status__dot {
+    background: oklch(72% 0.18 145);
+    animation: mc-status-pulse var(--duration-slowest) var(--ease-in-out) infinite;
+  }
+
+  .mc-status[data-state='offline'] .mc-status__dot {
+    background: oklch(58% 0.18 28);
+  }
+
+  @keyframes mc-status-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 oklch(72% 0.18 145 / 0.5); }
+    70%      { box-shadow: 0 0 0 0.5rem oklch(72% 0.18 145 / 0); }
+  }
+
+  .mc-status__body {
+    display: grid;
+    gap: var(--space-3);
+    min-inline-size: 0;
+  }
+
+  .mc-status__state {
+    font-size: var(--font-size-lg);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-primary);
+  }
+
+  .mc-status__meta {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+  }
+
+  .mc-status__meta-row {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+  }
+
+  .mc-status__meta-row dt {
+    color: var(--color-text-muted);
+  }
+
+  .mc-status__meta-row dd {
+    color: var(--color-text-primary);
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .mc-status__icon {
+    flex-shrink: 0;
+  }
+
+  .mc-status__favicon {
+    inline-size: 4rem;
+    block-size: 4rem;
+    border-radius: var(--radius-sm);
+    image-rendering: pixelated; /* Minecraft favicons are 64x64 — keep them crisp. */
+  }
+
+  .mc-status__last-checked {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+  }
+
+  /* Loading-state pulse on the state label. */
+  .mc-status[data-state='loading'] .mc-status__state {
+    color: var(--color-text-subtle);
+    animation: mc-status-text-pulse 1.6s var(--ease-in-out) infinite;
+  }
+
+  @keyframes mc-status-text-pulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 0.8; }
+  }
+</style>
+
+<script>
+  type MinecraftStatus = {
+    online: boolean;
+    players?: { current: number; max: number };
+    motd?: string;
+    version?: string;
+    faviconDataUrl?: string;
+    lastChecked: string;
+  };
+
+  const widget = document.querySelector<HTMLElement>('.mc-status');
+  const endpoint = widget?.dataset.endpoint;
+
+  if (widget && endpoint) {
+    const stateEl = widget.querySelector<HTMLElement>('.mc-status__state');
+    const playersRow = widget.querySelector<HTMLElement>('[data-field="players"]');
+    const playersEl = widget.querySelector<HTMLElement>('.mc-status__players');
+    const versionRow = widget.querySelector<HTMLElement>('[data-field="version"]');
+    const versionEl = widget.querySelector<HTMLElement>('.mc-status__version');
+    const motdRow = widget.querySelector<HTMLElement>('[data-field="motd"]');
+    const motdEl = widget.querySelector<HTMLElement>('.mc-status__motd');
+    const iconWrap = widget.querySelector<HTMLElement>('.mc-status__icon');
+    const iconEl = widget.querySelector<HTMLImageElement>('.mc-status__favicon');
+    const timeEl = widget.querySelector<HTMLTimeElement>('.mc-status__time');
+
+    const showRow = (row: HTMLElement | null, show: boolean): void => {
+      if (!row) return;
+      if (show) row.removeAttribute('hidden');
+      else row.setAttribute('hidden', '');
+    };
+
+    const render = (data: MinecraftStatus): void => {
+      widget.dataset.state = data.online ? 'online' : 'offline';
+
+      if (stateEl) {
+        stateEl.textContent = data.online ? 'Online' : 'Offline';
+      }
+
+      if (data.online && data.players) {
+        if (playersEl) {
+          playersEl.textContent = `${data.players.current} / ${data.players.max}`;
+        }
+        showRow(playersRow, true);
+      } else {
+        showRow(playersRow, false);
+      }
+
+      if (data.online && data.version) {
+        if (versionEl) versionEl.textContent = data.version;
+        showRow(versionRow, true);
+      } else {
+        showRow(versionRow, false);
+      }
+
+      if (data.online && data.motd) {
+        if (motdEl) motdEl.textContent = data.motd;
+        showRow(motdRow, true);
+      } else {
+        showRow(motdRow, false);
+      }
+
+      if (data.online && data.faviconDataUrl && iconEl && iconWrap) {
+        iconEl.src = data.faviconDataUrl;
+        iconWrap.removeAttribute('hidden');
+      } else if (iconWrap) {
+        iconWrap.setAttribute('hidden', '');
+      }
+
+      if (timeEl && data.lastChecked) {
+        const dt = new Date(data.lastChecked);
+        timeEl.dateTime = data.lastChecked;
+        timeEl.textContent = dt.toLocaleTimeString(undefined, {
+          hour: 'numeric',
+          minute: '2-digit',
+        });
+      }
+    };
+
+    const fetchOnce = async (): Promise<void> => {
+      try {
+        const res = await fetch(endpoint, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as MinecraftStatus;
+        render(data);
+      } catch {
+        // Silent — keep last known state.
+      }
+    };
+
+    fetchOnce();
+    const interval = window.setInterval(fetchOnce, 60_000);
+
+    document.addEventListener(
+      'astro:before-swap',
+      () => window.clearInterval(interval),
+      { once: true },
+    );
+  }
+</script>

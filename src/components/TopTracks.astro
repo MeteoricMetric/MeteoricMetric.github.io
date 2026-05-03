@@ -1,0 +1,262 @@
+---
+// merricstrough.com — Top tracks (last 4 weeks) horizontal album-art strip.
+//
+// Source: Worker /api/top-tracks → Spotify Web API /me/top/tracks?time_range=short_term.
+// "short_term" per Spotify docs ≈ last 4 weeks.
+//
+// Server-renders as a row of skeleton tiles; client hydrates on page load and
+// replaces tiles in place. If Spotify returns no tracks (new user, recent
+// auth) the section silently hides itself rather than show an empty row.
+//
+// Polling: ONE fetch on load. Top-tracks recompute daily on Spotify's side,
+// not per-track — re-fetching every 30s buys nothing. Worker's 6h edge cache
+// guarantees we don't hammer Spotify even if many visitors land at once.
+//
+// Per ADR-0002 §scroll-driven motion vocab — section uses [data-reveal]
+// hook from src/styles/motion.css for the entry animation.
+
+import { WORKER_ENDPOINTS } from '@data/worker-config';
+
+// 8 skeleton tiles — Spotify returns up to 10 but 8 reads cleanly across the
+// typical viewport without horizontal scrolling on tablet+.
+const SKELETON_COUNT = 8;
+const skeletonIds = Array.from({ length: SKELETON_COUNT }, (_, i) => i);
+---
+
+<section
+  class="top-tracks"
+  data-state="loading"
+  data-endpoint={WORKER_ENDPOINTS.topTracks}
+  aria-labelledby="top-tracks-heading"
+  data-reveal
+>
+  <header class="top-tracks__header">
+    <span class="eyebrow">On heavy rotation</span>
+    <h2 id="top-tracks-heading" class="top-tracks__heading">My top tracks this month</h2>
+    <p class="top-tracks__sub">From my Spotify — last 4 weeks of listening, recomputed daily.</p>
+  </header>
+
+  <ol class="top-tracks__list" role="list">
+    {skeletonIds.map((i) => (
+      <li class="top-tracks__item top-tracks__item--skeleton" data-skeleton-index={i}>
+        <div class="top-tracks__art" aria-hidden="true"></div>
+        <p class="top-tracks__title">—</p>
+        <p class="top-tracks__artist">—</p>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .top-tracks {
+    padding-block: var(--space-section);
+    padding-inline: var(--space-6);
+    max-inline-size: var(--measure-wide, 80rem);
+    margin-inline: auto;
+  }
+
+  .top-tracks__header {
+    display: grid;
+    gap: var(--space-2);
+    margin-block-end: var(--space-6);
+    max-inline-size: 50rem;
+  }
+
+  .top-tracks__heading {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-primary);
+    text-wrap: balance;
+  }
+
+  .top-tracks__sub {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-base);
+  }
+
+  .top-tracks__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+    /* Auto-fill — collapses gracefully from 8 across to 2 across on phone. */
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  }
+
+  .top-tracks__item {
+    display: grid;
+    gap: var(--space-1);
+    text-align: start;
+    color: inherit;
+    text-decoration: none;
+    transition: transform var(--duration-fast) var(--ease-spring);
+  }
+
+  /* When the item is wrapped in an <a>, make the hover lift apply to the link. */
+  a.top-tracks__item:hover {
+    transform: translateY(-2px);
+  }
+
+  .top-tracks__art {
+    aspect-ratio: 1;
+    inline-size: 100%;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-2);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .top-tracks__art img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .top-tracks__title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .top-tracks__artist {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Skeleton shimmer on cold load. */
+  .top-tracks__item--skeleton .top-tracks__art {
+    animation: top-tracks-shimmer 1.6s var(--ease-in-out) infinite;
+  }
+
+  .top-tracks__item--skeleton .top-tracks__title,
+  .top-tracks__item--skeleton .top-tracks__artist {
+    color: var(--color-text-subtle);
+    background: var(--color-surface-2);
+    border-radius: var(--radius-sm);
+    color: transparent;
+    animation: top-tracks-shimmer 1.6s var(--ease-in-out) infinite;
+  }
+
+  @keyframes top-tracks-shimmer {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 0.8; }
+  }
+
+  /* Empty / error state — section vanishes entirely so the page reflows naturally. */
+  .top-tracks[data-state='empty'],
+  .top-tracks[data-state='error'] {
+    display: none;
+  }
+</style>
+
+<script>
+  type TopTrack = {
+    title: string;
+    artist: string;
+    album: string;
+    albumImageUrl?: string;
+    songUrl?: string;
+  };
+
+  type TopTracksResponse = {
+    items: TopTrack[];
+    range: 'short_term';
+    lastChecked: string;
+  };
+
+  const widget = document.querySelector<HTMLElement>('.top-tracks');
+  const endpoint = widget?.dataset.endpoint;
+  const list = widget?.querySelector<HTMLOListElement>('.top-tracks__list');
+
+  if (widget && endpoint && list) {
+    const renderItem = (track: TopTrack): HTMLLIElement => {
+      const li = document.createElement('li');
+      li.className = 'top-tracks__item';
+
+      // If the track has a Spotify URL, wrap the whole tile in a link.
+      // Otherwise it's a passive tile (no surprising click behavior).
+      const Inner = track.songUrl ? document.createElement('a') : document.createElement('div');
+      if (track.songUrl) {
+        (Inner as HTMLAnchorElement).href = track.songUrl;
+        (Inner as HTMLAnchorElement).rel = 'noopener';
+        Inner.className = 'top-tracks__item';
+      }
+
+      const art = document.createElement('div');
+      art.className = 'top-tracks__art';
+      if (track.albumImageUrl) {
+        const img = document.createElement('img');
+        img.src = track.albumImageUrl;
+        img.alt = `${track.album} cover art`;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        art.appendChild(img);
+      }
+
+      const title = document.createElement('p');
+      title.className = 'top-tracks__title';
+      title.textContent = track.title;
+
+      const artist = document.createElement('p');
+      artist.className = 'top-tracks__artist';
+      artist.textContent = track.artist;
+
+      if (track.songUrl) {
+        Inner.appendChild(art);
+        Inner.appendChild(title);
+        Inner.appendChild(artist);
+        return Inner as HTMLLIElement & HTMLAnchorElement; // shape parity for caller
+      }
+
+      li.appendChild(art);
+      li.appendChild(title);
+      li.appendChild(artist);
+      return li;
+    };
+
+    const render = (data: TopTracksResponse): void => {
+      if (!data.items || data.items.length === 0) {
+        widget.dataset.state = 'empty';
+        return;
+      }
+
+      widget.dataset.state = 'ready';
+
+      // Replace the skeleton tiles with real items.
+      list.replaceChildren();
+      for (const track of data.items) {
+        const node = renderItem(track);
+        // If renderItem returned a wrapped <a>, host it inside an <li> for semantics.
+        if (node.tagName === 'A') {
+          const li = document.createElement('li');
+          li.appendChild(node);
+          list.appendChild(li);
+        } else {
+          list.appendChild(node);
+        }
+      }
+    };
+
+    (async (): Promise<void> => {
+      try {
+        const res = await fetch(endpoint, { cache: 'default' });
+        if (!res.ok) {
+          widget.dataset.state = 'error';
+          return;
+        }
+        const data = (await res.json()) as TopTracksResponse;
+        render(data);
+      } catch {
+        widget.dataset.state = 'error';
+      }
+    })();
+  }
+</script>

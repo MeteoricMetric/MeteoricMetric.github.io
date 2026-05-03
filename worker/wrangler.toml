@@ -31,6 +31,16 @@ compatibility_date = "2026-04-01"
 [observability]
 enabled = true
 
+# PUBLIC config — these are not secrets, they're public-facing values that vary
+# across environments. Secrets (Spotify + Twitch credentials) still go through
+# `wrangler secret put`, never here.
+[vars]
+# Minecraft server's public address (hostname[:port]) — used by /api/minecraft-status.
+# playit.gg tunnel hostname OR raw IP:port both work. Set to "" to disable the
+# Minecraft endpoint cleanly. Shane: paste the actual playit.gg address here
+# (also recorded in CLAUDE.local.md §4 for operational reference).
+MINECRAFT_SERVER_ADDRESS = ""
+
 # Workers.dev subdomain is enabled by default during initial deploy:
 #   https://merricstrough-now-playing.<account>.workers.dev/api/now-playing
 #

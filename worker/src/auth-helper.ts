@@ -37,15 +37,19 @@ import { platform } from 'node:os';
 
 const REDIRECT_URI = 'http://127.0.0.1:8888/callback';
 const CALLBACK_PORT = 8888;
-// user-read-private is needed so the diagnostic /me call returns the `product`
-// field (premium / free / open) — critical for diagnosing the Feb 2026
-// "Dev Mode requires Premium owner" rule. Adds nothing user-visible to the
-// existing Now Playing flow but unlocks the /api/debug endpoint's account-tier
-// reveal.
+// Scope set required for all current Worker endpoints:
+//   - user-read-currently-playing:  /api/now-playing
+//   - user-read-playback-state:     /api/now-playing (device + state context)
+//   - user-read-private:            diagnostic /me call (product / country fields)
+//   - user-top-read:                /api/top-tracks
+// Adding scopes here means re-running this script + re-issuing the
+// SPOTIFY_REFRESH_TOKEN secret + bumping ACCESS_TOKEN_CACHE_KEY's `-vN`
+// suffix in spotify.ts so the new scope set takes effect immediately.
 const REQUIRED_SCOPES = [
   'user-read-currently-playing',
   'user-read-playback-state',
   'user-read-private',
+  'user-top-read',
 ];
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;

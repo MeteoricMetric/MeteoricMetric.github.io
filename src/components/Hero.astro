@@ -3,6 +3,7 @@
 // Three planes: background (image | canvas | layered) + type + meta.
 import HeroBackground from '@components/HeroBackground.astro';
 import NowSpinning from '@components/NowSpinning.astro';
+import TwitchLive from '@components/TwitchLive.astro';
 import { hero } from '@data/site-content';
 
 const { backgroundMode, backgroundImage, canvasPreset, accentOverride, headline, subhead, ctas } =
@@ -39,6 +40,7 @@ const { backgroundMode, backgroundImage, canvasPreset, accentOverride, headline,
   </div>
 
   <div class="hero__meta">
+    <TwitchLive />
     <NowSpinning />
   </div>
 </section>
@@ -162,6 +164,9 @@ const { backgroundMode, backgroundImage, canvasPreset, accentOverride, headline,
     inset-block-end: var(--space-6);
     inset-inline-end: var(--space-6);
     z-index: var(--z-raised);
+    display: grid;
+    gap: var(--space-2);
+    justify-items: end;
   }
 
   @media (max-width: 640px) {

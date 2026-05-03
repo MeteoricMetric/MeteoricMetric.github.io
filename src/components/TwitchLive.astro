@@ -1,0 +1,163 @@
+---
+// merricstrough.com — Twitch LIVE badge (hero meta plane sibling to NowSpinning).
+//
+// Renders nothing on initial server render — the live state is unknown until
+// the client polls. The widget hydrates on page load, fetches /api/twitch-status,
+// and reveals itself ONLY when isLive=true. Offline = entirely invisible (no
+// "currently offline" pill — that's just visual noise on a personal site).
+//
+// Polling cadence: 60s (Twitch state changes are not second-by-second, and the
+// Worker's 20s edge cache + 60s SWR will absorb concurrent visitors).
+//
+// Accessibility:
+//   - aria-live="polite" so screen readers announce state changes once
+//   - the LIVE pulse animation respects prefers-reduced-motion via duration tokens
+//
+// Per ADR-0002 §Hero meta plane (the meta plane is where ambient social signals live).
+
+import { WORKER_ENDPOINTS } from '@data/worker-config';
+---
+
+<aside
+  class="twitch-live"
+  data-state="unknown"
+  data-endpoint={WORKER_ENDPOINTS.twitchStatus}
+  aria-live="polite"
+  aria-label="Twitch live status"
+  hidden
+>
+  <a class="twitch-live__pill" href="https://www.twitch.tv/meteoricmetric" rel="noopener">
+    <span class="twitch-live__dot" aria-hidden="true"></span>
+    <span class="twitch-live__label">
+      <span class="eyebrow">Live on Twitch</span>
+      <span class="twitch-live__title">—</span>
+    </span>
+  </a>
+</aside>
+
+<style>
+  .twitch-live {
+    /* Stacks above NowSpinning in the hero meta plane (parent gives gap). */
+  }
+
+  .twitch-live[hidden] {
+    /* Belt-and-braces: ensure no flash of pre-hydration content. */
+    display: none !important;
+  }
+
+  .twitch-live__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    text-decoration: none;
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-spring);
+    max-inline-size: 22rem;
+  }
+
+  .twitch-live__pill:hover {
+    background: var(--color-accent-muted);
+    border-color: var(--color-accent);
+    transform: translateY(-1px);
+  }
+
+  .twitch-live__dot {
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    border-radius: 50%;
+    background: oklch(62% 0.24 25); /* Twitch-ish red, leaning into "LIVE" affordance */
+    box-shadow: 0 0 0 0 oklch(62% 0.24 25 / 0.6);
+    flex-shrink: 0;
+    /* Pulse — the duration token collapses to 0.01ms under prefers-reduced-motion. */
+    animation: twitch-live-pulse var(--duration-slow) var(--ease-in-out) infinite;
+  }
+
+  @keyframes twitch-live-pulse {
+    0% {
+      box-shadow: 0 0 0 0 oklch(62% 0.24 25 / 0.6);
+    }
+    70% {
+      box-shadow: 0 0 0 0.5rem oklch(62% 0.24 25 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 oklch(62% 0.24 25 / 0);
+    }
+  }
+
+  .twitch-live__label {
+    display: grid;
+    gap: 0;
+    min-inline-size: 0;
+  }
+
+  .twitch-live__title {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+
+<script>
+  // Hydrates Twitch live-status. Polls every 60s; reveals only when isLive=true.
+  type TwitchStatus = {
+    isLive: boolean;
+    title?: string;
+    game?: string;
+    streamUrl?: string;
+    displayName?: string;
+  };
+
+  const widget = document.querySelector<HTMLElement>('.twitch-live');
+  const endpoint = widget?.dataset.endpoint;
+  if (!widget || !endpoint) {
+    // Component absent or misconfigured — nothing to do.
+  } else {
+    const titleEl = widget.querySelector<HTMLElement>('.twitch-live__title');
+    const linkEl = widget.querySelector<HTMLAnchorElement>('.twitch-live__pill');
+
+    const render = (data: TwitchStatus): void => {
+      if (data.isLive) {
+        widget.removeAttribute('hidden');
+        widget.dataset.state = 'live';
+        if (titleEl) {
+          // Prefer the stream title; fall back to game name; fall back to channel name.
+          const text = data.title || data.game || data.displayName || 'Streaming now';
+          titleEl.textContent = text;
+        }
+        if (linkEl && data.streamUrl) linkEl.href = data.streamUrl;
+      } else {
+        widget.setAttribute('hidden', '');
+        widget.dataset.state = 'offline';
+      }
+    };
+
+    const fetchOnce = async (): Promise<void> => {
+      try {
+        const res = await fetch(endpoint, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as TwitchStatus;
+        render(data);
+      } catch {
+        // Silent — keep current state, try again next interval.
+      }
+    };
+
+    fetchOnce();
+    const interval = window.setInterval(fetchOnce, 60_000);
+
+    // Cleanup on Astro view-transition swap.
+    document.addEventListener(
+      'astro:before-swap',
+      () => window.clearInterval(interval),
+      { once: true },
+    );
+  }
+</script>

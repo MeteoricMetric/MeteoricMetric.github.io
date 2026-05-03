@@ -86,3 +86,7 @@ if (document.readyState === 'loading') {
 }
 
 document.addEventListener('astro:page-load', init);
+
+// Force module scope — without imports/exports this file is a script and its
+// top-level `init` / `readNumberAttr` collide with the same names in magnetic-cursor.ts.
+export {};

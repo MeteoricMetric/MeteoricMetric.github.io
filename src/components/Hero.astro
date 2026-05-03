@@ -28,6 +28,8 @@ const { backgroundMode, backgroundImage, canvasPreset, accentOverride, headline,
             href={cta.url}
             class:list={['hero__cta', `hero__cta--${cta.kind}`]}
             rel={cta.url.startsWith('http') ? 'noopener' : undefined}
+            data-magnetic
+            data-magnetic-strength="0.32"
           >
             {cta.label}
           </a>

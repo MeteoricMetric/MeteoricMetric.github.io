@@ -24,7 +24,7 @@ const updatedFmt = new Intl.DateTimeFormat('en-US', {
 }).format(data.updated);
 ---
 
-<article class="project-card" data-status={data.status}>
+<article class="project-card" data-status={data.status} data-tilt data-tilt-max="5">
   {data.image && (
     <div class="project-card__media" aria-hidden="true">
       <img src={data.image} alt="" loading="lazy" decoding="async" />
@@ -43,7 +43,9 @@ const updatedFmt = new Intl.DateTimeFormat('en-US', {
 
   <footer class="project-card__footer">
     <p class="eyebrow project-card__updated">Updated {updatedFmt}</p>
-    {data.url && <a href={data.url} class="project-card__link" rel="noopener">Visit →</a>}
+    {data.url && (
+      <a href={data.url} class="project-card__link" rel="noopener" data-magnetic data-magnetic-radius="100">Visit →</a>
+    )}
   </footer>
 </article>
 

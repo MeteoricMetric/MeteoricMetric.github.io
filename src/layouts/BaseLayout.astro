@@ -8,10 +8,13 @@ import Footer from '@components/Footer.astro';
 import PersonSchema from '@components/PersonSchema.astro';
 
 // Tokens MUST load first; reset rebases the box model; base sets the
-// typographic baseline that every page depends on.
+// typographic baseline that every page depends on. motion.css adds the
+// scroll-driven section reveals (Enhancement 4) — pure CSS, no JS, behind
+// @supports + prefers-reduced-motion guards.
 import '@styles/tokens.css';
 import '@styles/reset.css';
 import '@styles/base.css';
+import '@styles/motion.css';
 
 interface Props {
   title: string;
@@ -52,6 +55,17 @@ const headProps = {
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <slot />
     <Footer />
+
+    {/*
+      UI cursor effects (Enhancements 2 + 3) — magnetic pull on [data-magnetic]
+      pills/CTAs and 3D tilt on [data-tilt] cards. Both files self-init on
+      DOMContentLoaded + astro:page-load and are no-ops under reduced-motion.
+      Astro bundles + tree-shakes these into a single small island script.
+    */}
+    <script>
+      import '@scripts/ui/magnetic-cursor';
+      import '@scripts/ui/card-tilt';
+    </script>
 
     <style>
       /* Skip-link — visually hidden until focused, then anchored top-left. */

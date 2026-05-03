@@ -1,0 +1,40 @@
+/* merricstrough.com — scroll-driven section reveals (per Enhancement 4).
+ *
+ * Pure CSS, no JavaScript. Uses the modern `animation-timeline: view()` API
+ * so the browser handles scroll-position math natively — no rAF loops, no
+ * IntersectionObserver, no off-screen layout thrash.
+ *
+ * Supported in Chromium 115+ (≈85% of 2026 traffic). Firefox + Safari fall
+ * back gracefully via the `@supports` guard: animation-timeline is unset
+ * there, the keyframes never run, and elements just appear at their final
+ * state immediately. Never broken, just less animated.
+ *
+ * Per ADR-0002 §Motion — sections fade + slide-up as they enter the viewport.
+ * Disabled wholesale under prefers-reduced-motion.
+ */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes reveal-on-scroll {
+      from {
+        opacity: 0;
+        transform: translateY(2rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Apply to any element with [data-reveal] — landing sections opt in,
+     * the hero deliberately doesn't (it's already in view at first paint). */
+    [data-reveal] {
+      animation: reveal-on-scroll linear both;
+      animation-timeline: view();
+      /* Animation drives only while the element is between 25% from the bottom
+       * of the viewport and 75% from the bottom — feels natural without
+       * holding the section "incomplete" for too long while scrolling. */
+      animation-range: entry 25% cover 35%;
+    }
+  }
+}

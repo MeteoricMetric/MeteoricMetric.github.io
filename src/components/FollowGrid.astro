@@ -7,7 +7,7 @@ const followAccounts = verifiedAccounts.filter((a) => a.showInFollow);
 ---
 
 {followAccounts.length > 0 && (
-  <section class="follow" aria-labelledby="follow-heading">
+  <section class="follow" aria-labelledby="follow-heading" data-reveal>
     <header class="follow__header">
       <p class="eyebrow">find me elsewhere</p>
       <h2 id="follow-heading" class="sr-only">Where to find Merric on the rest of the internet</h2>
@@ -15,7 +15,14 @@ const followAccounts = verifiedAccounts.filter((a) => a.showInFollow);
     <ul class="follow__grid" role="list">
       {followAccounts.map((account) => (
         <li>
-          <a class="follow__pill" href={account.url} rel="me noopener">
+          <a
+            class="follow__pill"
+            href={account.url}
+            rel="me noopener"
+            data-magnetic
+            data-magnetic-radius="90"
+            data-magnetic-strength="0.22"
+          >
             <span class="follow__platform">{account.platform}</span>
             <span class="follow__handle">@{account.handle}</span>
           </a>

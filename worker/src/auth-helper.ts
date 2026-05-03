@@ -37,7 +37,16 @@ import { platform } from 'node:os';
 
 const REDIRECT_URI = 'http://127.0.0.1:8888/callback';
 const CALLBACK_PORT = 8888;
-const REQUIRED_SCOPES = ['user-read-currently-playing', 'user-read-playback-state'];
+// user-read-private is needed so the diagnostic /me call returns the `product`
+// field (premium / free / open) — critical for diagnosing the Feb 2026
+// "Dev Mode requires Premium owner" rule. Adds nothing user-visible to the
+// existing Now Playing flow but unlocks the /api/debug endpoint's account-tier
+// reveal.
+const REQUIRED_SCOPES = [
+  'user-read-currently-playing',
+  'user-read-playback-state',
+  'user-read-private',
+];
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;

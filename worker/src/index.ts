@@ -174,6 +174,23 @@ export default {
       return jsonResponse(SAFE_FALLBACK, 405, corsHeaders);
     }
 
+    // Diagnostic endpoint — temporary. Returns RAW Spotify responses for
+    // /me, /me/player/devices, /me/player. Triangulates "wrong account vs
+    // wrong scopes vs no visible device vs Free-account-on-Dev-Mode-app".
+    // Remove or gate behind a shared secret once the production widget is
+    // confirmed working. See worker/README.md (Operations).
+    if (url.pathname === '/api/debug') {
+      const debug = await getDebugSnapshot(env);
+      return new Response(JSON.stringify(debug, null, 2), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'no-store',
+          ...corsHeaders,
+        },
+      });
+    }
+
     if (url.pathname !== '/api/now-playing') {
       return jsonResponse(SAFE_FALLBACK, 404, corsHeaders);
     }
@@ -188,6 +205,73 @@ export default {
     }
   },
 } satisfies ExportedHandler<Env>;
+
+// ---------------------------------------------------------------------------
+// DIAGNOSTIC — temporary; remove once production widget is verified working
+// ---------------------------------------------------------------------------
+
+interface DebugSnapshot {
+  meta: {
+    timestamp: string;
+    note: string;
+  };
+  me: {
+    status: number;
+    body: unknown;
+  };
+  devices: {
+    status: number;
+    body: unknown;
+  };
+  player: {
+    status: number;
+    body: unknown;
+  };
+}
+
+async function getDebugSnapshot(env: Env): Promise<DebugSnapshot> {
+  const accessToken = await getAccessToken(env);
+  if (!accessToken) {
+    return {
+      meta: {
+        timestamp: new Date().toISOString(),
+        note: 'access token refresh failed — check SPOTIFY_CLIENT_ID/SECRET/REFRESH_TOKEN secrets',
+      },
+      me: { status: 0, body: null },
+      devices: { status: 0, body: null },
+      player: { status: 0, body: null },
+    };
+  }
+
+  const headers = { Authorization: `Bearer ${accessToken}` };
+
+  const [meRes, devicesRes, playerRes] = await Promise.all([
+    fetch('https://api.spotify.com/v1/me', { headers }),
+    fetch('https://api.spotify.com/v1/me/player/devices', { headers }),
+    fetch('https://api.spotify.com/v1/me/player?additional_types=track,episode', { headers }),
+  ]);
+
+  return {
+    meta: {
+      timestamp: new Date().toISOString(),
+      note: 'Diagnostic snapshot. /me reveals authorized account + tier (product field needs user-read-private scope). /me/player/devices shows what Spotify Connect sees. /me/player is the full playback context.',
+    },
+    me: { status: meRes.status, body: await safeJsonOrText(meRes) },
+    devices: { status: devicesRes.status, body: await safeJsonOrText(devicesRes) },
+    player: { status: playerRes.status, body: await safeJsonOrText(playerRes) },
+  };
+}
+
+async function safeJsonOrText(response: Response): Promise<unknown> {
+  if (response.status === 204) return null;
+  const text = await response.text();
+  if (text.length === 0) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text.length > 1024 ? `${text.slice(0, 1024)}…` : text;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Core flow

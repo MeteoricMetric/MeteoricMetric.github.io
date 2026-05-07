@@ -39,7 +39,14 @@ enabled = true
 # playit.gg tunnel hostname OR raw IP:port both work. Set to "" to disable the
 # Minecraft endpoint cleanly. Shane: paste the actual playit.gg address here
 # (also recorded in CLAUDE.local.md §4 for operational reference).
-MINECRAFT_SERVER_ADDRESS = "mc.merricstrough.com"
+# NOTE: must be the playit-canonical hostname, NOT mc.merricstrough.com.
+# Playit (free tier) routes based on the hostname sent in the Minecraft SLP
+# handshake. mcstatus.io connects directly and sends whatever was queried —
+# `mc.merricstrough.com` is not registered as a playit tunnel name, so playit
+# drops the connection and mcstatus.io reports offline. The custom CNAME
+# still works for actual Java clients (modern clients send SRV target in
+# handshake, not user input). Only our status pinger needs the canonical name.
+MINECRAFT_SERVER_ADDRESS = "award-long.gl.joinmc.link"
 
 # Workers.dev subdomain is enabled by default during initial deploy:
 #   https://merricstrough-now-playing.<account>.workers.dev/api/now-playing

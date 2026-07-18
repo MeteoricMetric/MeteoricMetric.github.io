@@ -1,5 +1,11 @@
 # CLAUDE.md — merricstrough.com
 
+> **Cross-project doctrine:** this project follows the one engineering law — reason from
+> first principles on the moat, ride the paved road on the scaffolding, never hand back a
+> blocker you haven't tried to break yourself, and verify against ground truth, not memory.
+> It lives in [`../AI_CODING_DOCTRINE.md`](../AI_CODING_DOCTRINE.md) (root of `projects_root`)
+> and applies here.
+
 > **Mission:** Build the personal digital headquarters of Merric Strough (handle: MeteoricMetric) with the engineering rigor of SpaceX, the design soul of Awwwards, the security posture of NSA, the documentation discipline of MIT Labs, and the AI-native fluency of an Anthropic / OpenAI / Cerebras team.
 >
 > This is a 13-year-old's site. It is also a real piece of software, deployed to the real internet, with his real name on it. Treat both truths with equal seriousness.

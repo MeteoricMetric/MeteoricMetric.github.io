@@ -342,7 +342,7 @@ Body of the commit (if needed) explains *why* in 1-3 sentences.
 ```
 Co-Authored-By: Merric Strough <277578502+MeteoricMetric@users.noreply.github.com>
 Co-Authored-By: Shane Strough <196983413+shane-thomas-strough@users.noreply.github.com>
-Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+Co-Authored-By: <the model that did the work> <noreply@anthropic.com>
 ```
 
 The emails are GitHub's noreply addresses — they expose nothing private and make the avatars render. If a commit is genuinely solo (e.g. a Pages-CMS edit by Merric himself with no Shane/Claude involvement), drop the relevant trailers. Default for AI-collaborated commits = all three.

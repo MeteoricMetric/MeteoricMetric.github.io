@@ -83,7 +83,7 @@ Architectural decisions live in [`docs/decisions/`](docs/decisions/) as ADRs.
 
 ## Quickstart
 
-Requires Node **22.18** (pinned in `.nvmrc`; CI reads the same file).
+Requires Node **22.23.4** (pinned in `.nvmrc`; CI reads the same file).
 
 ```bash
 npm install         # install dependencies
